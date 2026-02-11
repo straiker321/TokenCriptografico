@@ -214,16 +214,16 @@ public class Token {
         return flgtokcon == 1 ? "SIN TOKEN" : "CON TOKEN";
     }
     
-    public boolean isPendienteConfirmacion1() {
-        return codempcon == null;
+    public boolean isPendienteConfirmacionInicial() {
+        return codempcon == null && codempcon2 == null;
     }
     
-    public boolean isPendienteConfirmacion2() {
+    public boolean isPendienteConfirmacionFinal() {
         return codempcon != null && codempcon2 == null;
     }
     
     public boolean isCompleto() {
-        return codempcon2 != null;
+        return codempcon2 != null && codempcon2 == null;
     }
     
     @Override

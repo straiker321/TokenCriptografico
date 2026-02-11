@@ -84,10 +84,18 @@ public class LoginServlet extends HttpServlet {
             session.setAttribute("perfil", usuario.getNombrePerfil());
             session.setAttribute("dependencia", usuario.getDependencia());
             session.setAttribute("isAdmin", usuario.isAdmin());
-            session.setAttribute("isImplementadorAdmin", usuario.isImplementadorAdmin());
             
             // Configurar tiempo de sesión (30 minutos)
             session.setMaxInactiveInterval(30 * 60);
+            
+            String perfil = usuario.getNombrePerfil();
+            if(!"ADMINISTRADOR".equalsIgnoreCase(perfil)
+                    && !"IMPLEMENTADOR".equalsIgnoreCase(perfil)){
+            session.invalidate();
+            request.setAttribute("error", "perfil no autorizado");
+            request.getRequestDispatcher("/login.jsp").forward(request, response);
+            return;
+            }
             
             // Recordar usuario si se seleccionó
             if ("on".equals(recordar)) {

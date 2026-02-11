@@ -60,17 +60,18 @@ public class Usuario {
     public void setDependencia(String dependencia) { this.dependencia = dependencia; }
     
     public boolean isAdmin() {
-        return "ADMINISTRADOR".equals(nombrePerfil);
+        if(nombrePerfil != null && !nombrePerfil.trim().isEmpty()){
+          return "ADMINISTRADOR".equalsIgnoreCase(nombrePerfil.trim());      
+        }
+        return idPerfil == 1;
     }
     
-    public boolean isImplementadorAdmin() {
-        return "IMPLEMENTADOR_ADMIN".equals(nombrePerfil);
+    public String getRolDisplay(){
+        return isAdmin() ? "ADMINISTRADOR" : "IMPLEMENTADOR";
     }
     
-
-    public boolean esImplementador() {
-        if (nombrePerfil == null) return false;
-        return nombrePerfil.toUpperCase().contains("IMPLEMENTADOR");
+    public boolean isActivo(){
+        return activo == 1;
     }
     
     @Override

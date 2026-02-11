@@ -314,55 +314,55 @@ function mostrarFormularioConfirmacion(id, data) {
         }
     }
     
-    const seccionConf1 = document.getElementById('seccionConfirmacion1');
-    const seccionConf2 = document.getElementById('seccionConfirmacion2');
+    const seccionInicial = document.getElementById('seccionConfirmacionInicial');
+    const seccionFinal = document.getElementById('seccionConfirmacionFinal');
     
     // Determinar qué mostrar según el estado del token
-    const tienePrimeraConf = data.codempcon !== undefined && data.codempcon !== null && data.codempcon > 0;
-    const tieneSegundaConf = data.codempcon2 !== undefined && data.codempcon2 !== null && data.codempcon2 > 0;
+    const tieneInicial = data.codempcon !== undefined && data.codempcon !== null && data.codempcon > 0;
+    const tieneFinal = data.codempcon2 !== undefined && data.codempcon2 !== null && data.codempcon2 > 0;
     
-    console.log('Primera confirmación:', tienePrimeraConf);
-    console.log('Segunda confirmación:', tieneSegundaConf);
+    console.log('Confirmacion Inicial:', tieneInicial);
+    console.log('Confirmacion Final:', tieneFinal);
     
-    if (!tienePrimeraConf) {
+    if (!tieneInicial) {
         // PRIMERA CONFIRMACIÓN
-        console.log('→ Mostrando formulario de PRIMERA confirmación');
+        console.log('→ Mostrando formulario de Confirmacion Inicial');
         
         document.getElementById('actionConfirmar').value = 'confirmar1';
-        seccionConf1.style.display = 'block';
-        seccionConf2.style.display = 'none';
+        seccionInicial.style.display = 'block';
+        seccionFinal.style.display = 'none';
         
         // Habilitar todos los campos de confirmación 1
-        seccionConf1.querySelectorAll('input, select, textarea').forEach(el => {
+        seccionInicial.querySelectorAll('input, select, textarea').forEach(el => {
             if (!el.readOnly && el.type !== 'button') {
                 el.disabled = false;
             }
         });
         
         // Limpiar campos
-        seccionConf1.querySelectorAll('input:not([readonly]), select, textarea').forEach(el => {
+        seccionInicial.querySelectorAll('input:not([readonly]), select, textarea').forEach(el => {
             if (el.type !== 'file' && el.type !== 'button') {
                 el.value = '';
             }
         });
         
         // Marcar campos requeridos
-        seccionConf1.querySelectorAll('[required]').forEach(el => el.required = true);
-        seccionConf2.querySelectorAll('[required]').forEach(el => el.required = false);
+        seccionInicial.querySelectorAll('[required]').forEach(el => el.required = true);
+        seccionFinal.querySelectorAll('[required]').forEach(el => el.required = false);
         
-    } else if (tienePrimeraConf && !tieneSegundaConf) {
+    } else if (tieneInicial && !tieneFinal) {
         // SEGUNDA CONFIRMACIÓN
-        console.log('→ Mostrando formulario de SEGUNDA confirmación');
+        console.log('→ Mostrando formulario de Confirmacion Final');
         
         document.getElementById('actionConfirmar').value = 'confirmar2';
-        seccionConf1.style.display = 'block';
-        seccionConf2.style.display = 'block';
+        seccionInicial.style.display = 'block';
+        seccionFinal.style.display = 'block';
         
         // Deshabilitar todos los campos de confirmación 1
-        seccionConf1.querySelectorAll('input, select, textarea').forEach(el => {
+        seccionInicial.querySelectorAll('input, select, textarea').forEach(el => {
             el.disabled = true;
         });
-        seccionConf1.querySelectorAll('[required]').forEach(el => el.required = false);
+        seccionInicial.querySelectorAll('[required]').forEach(el => el.required = false);
         
         // Mostrar datos de la primera confirmación en resumen
         document.getElementById('datoDniConf1').textContent = data.dniConf1 || '-';
@@ -370,21 +370,21 @@ function mostrarFormularioConfirmacion(id, data) {
         document.getElementById('datoEstadoConf1').textContent = data.estadoTokenConf1 || '-';
         
         // Habilitar campos de confirmación 2
-        seccionConf2.querySelectorAll('input, select, textarea').forEach(el => {
+        seccionFinal.querySelectorAll('input, select, textarea').forEach(el => {
             if (!el.readOnly && el.type !== 'button') {
                 el.disabled = false;
             }
         });
         
         // Limpiar campos
-        seccionConf2.querySelectorAll('input:not([readonly]), select, textarea').forEach(el => {
+        seccionFinal.querySelectorAll('input:not([readonly]), select, textarea').forEach(el => {
             if (el.type !== 'file' && el.type !== 'button') {
                 el.value = '';
             }
         });
         
         // Marcar campos requeridos
-        seccionConf2.querySelectorAll('[required]').forEach(el => el.required = true);
+        seccionFinal.querySelectorAll('[required]').forEach(el => el.required = true);
         
     } else {
         alert('Este token ya tiene ambas confirmaciones registradas');

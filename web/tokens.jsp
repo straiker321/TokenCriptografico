@@ -146,12 +146,14 @@
                               name="fechaDesde" 
                               id="fechaDesde"
                               class="form-control"
+                              value="${fecIni}"
                               placeholder="Fecha desde">
 
                        <input type="date" 
                               name="fechaHasta" 
                               id="fechaHasta"
                               class="form-control"
+                              value="${fecFin}"
                               placeholder="Fecha hasta">
 
                        <button type="submit" class="btn btn-secondary">
@@ -167,11 +169,7 @@
                        </button>
                    </div>
                </form>
-                <!-- 
-                    BOTÓN ASIGNAR TOKEN según documento (1.b.iv):
-                    - Solo ADMINISTRADOR puede asignar
-                    - Implementadores (con o sin admin) solo CONFIRMAN, NO ASIGNAN
-                -->
+ 
                 <% if (isAdmin) { %>
                 <button class="btn btn-primary" onclick="mostrarModal('modalAsignar')">
                     <i class="fas fa-plus"></i> Asignar Token
@@ -205,7 +203,7 @@
                                 boolean mostrarEditar = false;
                                 
                                 if (isAdmin) {
-                                    // ADMIN siempre puede editar (3.2.1)
+                                    
                                     mostrarEditar = true;
                                 } else {
                                     // NO ADMIN solo ve ícono si hay confirmaciones pendientes
@@ -226,10 +224,10 @@
                             <td>
                                 <% if (token.isCompleto()) { %>
                                 <span class="badge badge-success">✓ COMPLETO</span>
-                                <% } else if (token.isPendienteConfirmacion2()) { %>
-                                <span class="badge badge-info">⏳ PEND. CONF. 2</span>
-                                <% } else if (token.isPendienteConfirmacion1()) { %>
-                                <span class="badge badge-warning">⏳ PEND. CONF. 1</span>
+                                <% } else if (token.isPendienteConfirmacionFinal()) { %>
+                                <span class="badge badge-info">⏳ PEND. CONF. FINAL</span>
+                                <% } else if (token.isPendienteConfirmacionInicial()) { %>
+                                <span class="badge badge-warning">⏳ PEND. CONF. INICIAL</span>
                                 <% } %>
                             </td>
                             <td><%= token.getTipAccionTexto() %></td>
@@ -538,11 +536,11 @@
                 </div>
                 
                 <!-- SECCIÓN 2: CONFIRMAR ASIGNACIÓN DEL TOKEN -->
-                <div class="form-section" id="seccionConfirmacion1" style="background: #fff8e1; border-left-color: #ff9800;">
-                    <h4><i class="fas fa-check"></i> CONFIRMAR ASIGNACIÓN DEL TOKEN</h4>
+                <div class="form-section" id="seccionConfirmacionInicial" style="background: #fff8e1; border-left-color: #ff9800;">
+                    <h4><i class="fas fa-check"></i> CONFIRMAR ASIGNACIÓN INICIAL DEL TOKEN</h4>
                     
                     <div class="form-row">
-                        <div class="form-group">
+                        <div class="form-group">       
                             <label>DNI del Usuario al que se asignó <span style="color: red;">(*)</span></label>
                             <input type="text" name="dniConfirma" class="form-control" 
                                    pattern="[0-9]{8}" maxlength="8" id="dniConf1"
@@ -622,7 +620,7 @@
                 </div>
                 
                 <!-- SECCIÓN 3: CONFIRMAR ASIGNACIÓN FINAL -->
-                <div class="form-section" id="seccionConfirmacion2" style="display: none; background: #e8f5e9; border-left-color: #4caf50;">
+                <div class="form-section" id="seccionConfirmacionFinal" style="display: none; background: #e8f5e9; border-left-color: #4caf50;">
                     <h4><i class="fas fa-check-double"></i> CONFIRMAR ASIGNACIÓN FINAL</h4>
                     
                     <div style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 15px;">

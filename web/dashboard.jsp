@@ -13,7 +13,7 @@
     String perfil = usuario.getNombrePerfil();
     String dependencia = usuario.getDependencia();
     boolean isAdmin = usuario.isAdmin();
-    boolean isImplementadorAdmin = usuario.isImplementadorAdmin();
+    boolean isImplementador = "IMPLEMENTADOR" .equalsIgnoreCase(usuario.getNombrePerfil());
     
     // Obtener estadísticas reales
     TokenDAO tokenDAO = new TokenDAO();
@@ -69,21 +69,7 @@
                     </a>
                 </li>
                 
-                <li class="nav-item">
-                    <a href="consultas.jsp">
-                        <i class="fas fa-search"></i>
-                        <span>Consultas</span>
-                    </a>
-                </li>
                 
-                <% if (isAdmin || isImplementadorAdmin) { %>
-                <li class="nav-item">
-                    <a href="reportes.jsp">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>Reportes</span>
-                    </a>
-                </li>
-                <% } %>
                 
                 <% if (isAdmin) { %>
                 <li class="nav-divider"></li>
@@ -96,12 +82,6 @@
                     </a>
                 </li>
                 
-                <li class="nav-item">
-                    <a href="configuracion.jsp">
-                        <i class="fas fa-cog"></i>
-                        <span>Configuración</span>
-                    </a>
-                </li>
                 <% } %>
             </ul>
         </nav>
@@ -148,7 +128,7 @@
                         </div>
                         <div class="user-info-header">
                             <span class="user-name"><%= nombreCompleto %></span>
-                            <span class="user-role-badge <%= isAdmin ? "badge-admin" : (isImplementadorAdmin ? "badge-impl-admin" : "badge-impl") %>">
+                            <span class="user-role-badge <%= isAdmin ? "badge-admin" : (isImplementador ? "badge-impl-admin" : "badge-impl") %>">
                                 <%= perfil %>
                             </span>
                         </div>
@@ -243,7 +223,7 @@
                         <i class="fas fa-search"></i>
                         <span>Buscar Token</span>
                     </a>
-                    <% if (isAdmin || isImplementadorAdmin) { %>
+                    <% if (isAdmin || isImplementador) { %>
                     <a href="tokens?action=exportExcel" class="action-card">
                         <i class="fas fa-file-excel"></i>
                         <span>Exportar a Excel</span>
