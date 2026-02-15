@@ -223,7 +223,7 @@ public class Token {
     }
     
     public boolean isCompleto() {
-        return codempcon2 != null && codempcon2 == null;
+        return codempcon2 != null;
     }
     
     @Override

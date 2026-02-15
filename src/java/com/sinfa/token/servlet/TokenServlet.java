@@ -20,7 +20,8 @@ import javax.servlet.http.*;
 )
 public class TokenServlet extends HttpServlet {
 
-    private static final String UPLOAD_DIR = "uploads" + File.separator + "tokens";
+    private static final String UPLOAD_DIR = "C:/Users/informatica/Documents/token-proyecto/archivos";
+
 
     private TokenDAO tokenDAO;
     private EmpleadoDAO empleadoDAO;
@@ -200,7 +201,7 @@ public class TokenServlet extends HttpServlet {
         String nombreArchivo = null;
         Part filePart = request.getPart("docSustento");
         if (filePart != null && filePart.getSize() > 0) {
-            nombreArchivo = guardarArchivo(filePart, request);
+            nombreArchivo = guardarArchivo(filePart);
         }
 
         // Crear token
@@ -317,7 +318,7 @@ public class TokenServlet extends HttpServlet {
             if (filePart != null && filePart.getSize() > 0) {
                 // Hay archivo nuevo
                 System.out.println("  - Subiendo nuevo archivo...");
-                String nombreArchivo = guardarArchivo(filePart, request);
+                String nombreArchivo = guardarArchivo(filePart);
                 token.setDocSustento(nombreArchivo);
 
                 // Eliminar archivo anterior si existe
@@ -374,7 +375,7 @@ public class TokenServlet extends HttpServlet {
         String nombreArchivo = null;
         Part filePart = request.getPart("docSustentoEntrega");
         if (filePart != null && filePart.getSize() > 0) {
-            nombreArchivo = guardarArchivo(filePart, request);
+            nombreArchivo = guardarArchivo(filePart);
         }
 
         Token token = tokenDAO.obtenerPorId(idToken);
@@ -444,7 +445,7 @@ public class TokenServlet extends HttpServlet {
         String nombreArchivo = null;
         Part filePart = request.getPart("docSustentoFinal");
         if (filePart != null && filePart.getSize() > 0) {
-            nombreArchivo = guardarArchivo(filePart, request);
+            nombreArchivo = guardarArchivo(filePart);
         }
 
         token.setCodempcon2(usuario.getCempCoEmp());
@@ -572,6 +573,7 @@ public class TokenServlet extends HttpServlet {
                 if (token.getTxtobscon() != null && !token.getTxtobscon().isEmpty()) {
                     json.append(",\"obsConf1\":\"").append(escapeJson(token.getTxtobscon())).append("\"");
                 }
+                
             }
 
             // ========== SEGUNDA CONFIRMACIÓN ==========
@@ -688,8 +690,7 @@ public class TokenServlet extends HttpServlet {
             return;
         }
 
-        String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR;
-        File file = new File(uploadPath + File.separator + fileName);
+        File file = new File(UPLOAD_DIR + File.separator + fileName);
 
         if (!file.exists()) {
             response.sendError(404, "Archivo no encontrado");
@@ -701,7 +702,7 @@ public class TokenServlet extends HttpServlet {
         response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
 
         try (FileInputStream fis = new FileInputStream(file);
-                OutputStream out = response.getOutputStream()) {
+             OutputStream out = response.getOutputStream()) {
 
             byte[] buffer = new byte[4096];
             int bytesRead;
@@ -709,12 +710,13 @@ public class TokenServlet extends HttpServlet {
             while ((bytesRead = fis.read(buffer)) != -1) {
                 out.write(buffer, 0, bytesRead);
             }
-
-            System.out.println("✓ Archivo descargado: " + fileName);
         }
+
+        System.out.println("✓ Archivo servido correctamente: " + fileName);
     }
 
-    private String guardarArchivo(Part filePart, HttpServletRequest request) throws IOException {
+    private String guardarArchivo(Part filePart) throws IOException {
+
         String fileName = getFileName(filePart);
 
         if (!FileUtil.isValidExtension(fileName)) {
@@ -725,18 +727,17 @@ public class TokenServlet extends HttpServlet {
             throw new IOException("El archivo no debe superar los 5MB");
         }
 
-        String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR;
-        File uploadDir = new File(uploadPath);
+        File uploadDir = new File(UPLOAD_DIR);
         if (!uploadDir.exists()) {
             uploadDir.mkdirs();
         }
 
         String uniqueFileName = FileUtil.generateUniqueFileName(fileName);
-        String filePath = uploadPath + File.separator + uniqueFileName;
+        String filePath = UPLOAD_DIR + File.separator + uniqueFileName;
 
         filePart.write(filePath);
 
-        System.out.println("✓ Archivo guardado: " + uniqueFileName + " (" + filePart.getSize() + " bytes)");
+        System.out.println("✓ Archivo guardado en: " + filePath);
 
         return uniqueFileName;
     }

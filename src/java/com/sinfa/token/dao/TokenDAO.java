@@ -552,6 +552,7 @@ public class TokenDAO {
             }
 
             Integer codempcon2 = (Integer) rs.getObject("codempcon2");
+            System.out.println("codempcon2: " + codempcon2);
             if (codempcon2 != null) {
                 token.setCodempcon2(codempcon2);
             }

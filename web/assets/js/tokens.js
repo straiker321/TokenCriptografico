@@ -369,6 +369,7 @@ function mostrarFormularioConfirmacion(id, data) {
         document.getElementById('datoTieneConf1').textContent = data.tieneTokenConf1 || '-';
         document.getElementById('datoEstadoConf1').textContent = data.estadoTokenConf1 || '-';
         
+       
         // Habilitar campos de confirmación 2
         seccionFinal.querySelectorAll('input, select, textarea').forEach(el => {
             if (!el.readOnly && el.type !== 'button') {

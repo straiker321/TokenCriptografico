@@ -220,7 +220,7 @@
                             <td><%= sdf.format(token.getFecaccion()) %></td>
                             <td><%= token.getNumdnitok() %></td>
                             <td><%= token.getNombreUsuarioAsignado() %></td>
-                            <td><%= token.getNombreDependencia() %></td>
+                            <td><%= token.getNombreDependencia()%></td>
                             <td>
                                 <% if (token.isCompleto()) { %>
                                 <span class="badge badge-success">✓ COMPLETO</span>
