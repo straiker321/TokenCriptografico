@@ -7,7 +7,9 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.*;
 import javax.servlet.http.*;
@@ -20,7 +22,11 @@ import javax.servlet.http.*;
 )
 public class TokenServlet extends HttpServlet {
 
-    private static final String UPLOAD_DIR = "C:/Users/informatica/Documents/token-proyecto/archivos";
+    private static final String UPLOAD_DIR_PARAM = "tokenUploadDir";
+    private static final String EXTRA_READ_DIRS_PARAM = "tokenReadDirs";
+    private static final String UPLOAD_DIR_SYSTEM_PROPERTY = "token.upload.dir";
+    private static final String DEFAULT_UPLOAD_DIR = "token-proyecto" + File.separator + "archivos";
+    private String uploadDir;
 
 
     private TokenDAO tokenDAO;
@@ -32,7 +38,46 @@ public class TokenServlet extends HttpServlet {
         tokenDAO = new TokenDAO();
         empleadoDAO = new EmpleadoDAO();
         dependenciaDAO = new DependenciaDAO();
+        uploadDir = resolveUploadDir();
         System.out.println("✓ TokenServlet inicializado correctamente");
+    }
+
+    private String resolveUploadDir() {
+        String systemPropertyDir = System.getProperty(UPLOAD_DIR_SYSTEM_PROPERTY);
+        if (systemPropertyDir != null && !systemPropertyDir.trim().isEmpty()) {
+            return systemPropertyDir.trim();
+        }
+
+        String configuredDir = getServletContext().getInitParameter(UPLOAD_DIR_PARAM);
+        if (configuredDir != null && !configuredDir.trim().isEmpty()) {
+            return configuredDir.trim();
+        }
+
+        return System.getProperty("user.home") + File.separator + DEFAULT_UPLOAD_DIR;
+    }
+
+    private List<String> getReadableDirectories() {
+        Set<String> directories = new LinkedHashSet<>();
+        directories.add(uploadDir);
+
+        String webRoot = getServletContext().getRealPath("");
+        if (webRoot != null && !webRoot.isEmpty()) {
+            String appUploads = webRoot + File.separator + "uploads" + File.separator + "tokens";
+            directories.add(appUploads);
+        }
+
+        String configuredReadDirs = getServletContext().getInitParameter(EXTRA_READ_DIRS_PARAM);
+        if (configuredReadDirs != null && !configuredReadDirs.trim().isEmpty()) {
+            String[] splitDirs = configuredReadDirs.split(",");
+            for (String dir : splitDirs) {
+                String normalized = dir.trim();
+                if (!normalized.isEmpty()) {
+                    directories.add(normalized);
+                }
+            }
+        }
+
+        return new ArrayList<>(directories);
     }
 
     @Override
@@ -130,7 +175,7 @@ public class TokenServlet extends HttpServlet {
             System.out.println("ROL: IMPLEMENTADOR NO ADMIN");
             System.out.println("FILTRO CORRECTO: esttokcon IN (1,2)");
             //tokens = tokenDAO.listarParaImplementadorNoAdmin1();
-            tokens = tokenDAO.buscar("", "", "", usuario.isAdmin(), usuario.getCempCoEmp());
+            tokens = tokenDAO.listarPorUnidad(usuario.getCempCoEmp());
 
             //tokens = tokenDAO.listarParaImplementadorNoAdmin2();
         } else {
@@ -194,7 +239,29 @@ public class TokenServlet extends HttpServlet {
         // Empleado que recibe (opcional)
         Empleado empRecibe = null;
         if (dniUsuarioRecibe != null && !dniUsuarioRecibe.trim().isEmpty()) {
+            if (!ValidationUtil.isValidDNI(dniUsuarioRecibe)) {
+                request.setAttribute("error", "DNI del usuario que recibe inválido");
+                listarTokens(request, response, usuario);
+                return;
+            }
+
             empRecibe = empleadoDAO.buscarPorDNI(dniUsuarioRecibe);
+
+            if (empRecibe == null) {
+                request.setAttribute("error", "Empleado que recibe no encontrado con DNI: " + dniUsuarioRecibe);
+                listarTokens(request, response, usuario);
+                return;
+            }
+
+            int cantidadRecibidos = empleadoDAO.contarRegistrosRecibidosPorDNI(dniUsuarioRecibe);
+            if (cantidadRecibidos > 0) {
+                String warningActual = (String) request.getAttribute("warning");
+                String warningRecibe = "Este usuario ya tiene " + cantidadRecibidos
+                        + " registro(s) de tokens recibidos";
+                request.setAttribute("warning", warningActual == null
+                        ? warningRecibe
+                        : warningActual + " | " + warningRecibe);
+            }
         }
 
         // Manejar archivo
@@ -207,8 +274,11 @@ public class TokenServlet extends HttpServlet {
         // Crear token
         Token token = new Token();
         token.setCodempreg(usuario.getCempCoEmp());
-        int unidadDelUsuarioRegistrador = dependenciaDAO.obtenerCodigoDependenciaUsuario(usuario.getCempCoEmp());
-        token.setUniregistra(unidadRegistra);
+        if (usuario.isAdmin()) {
+            token.setUniregistra(unidadRegistra);
+        } else {
+            token.setUniregistra(dependenciaDAO.obtenerCodigoDependenciaUsuario(usuario.getCempCoEmp()));
+        }
         token.setNumdnitok(dniUsuarioAsigna);
         token.setCodemptok(empAsigna.getCempCoEmp());
         token.setUniemptok(empAsigna.getCempCoDepend());
@@ -232,13 +302,6 @@ public class TokenServlet extends HttpServlet {
             System.out.println("✓ Token creado ID:" + idNuevo + " por: " + usuario.getUsername());
         } else {
             request.setAttribute("error", "Error al guardar el token");
-        }
-
-        if (usuario.isAdmin()) {
-            token.setUniregistra(unidadRegistra);
-        } else {
-            int unidadDelUsuario = dependenciaDAO.obtenerCodigoDependenciaUsuario(usuario.getCempCoEmp());
-            token.setUniregistra(unidadDelUsuario);
         }
 
         listarTokens(request, response, usuario);
@@ -321,10 +384,9 @@ public class TokenServlet extends HttpServlet {
                 String nombreArchivo = guardarArchivo(filePart);
                 token.setDocSustento(nombreArchivo);
 
-                // Eliminar archivo anterior si existe
+                // Mantener archivo anterior para trazabilidad/histórico y evitar enlaces rotos (404)
                 if (archivoAnterior != null && !archivoAnterior.isEmpty()) {
-                    FileUtil.deleteFile(archivoAnterior);
-                    System.out.println("  - Archivo anterior eliminado: " + archivoAnterior);
+                    System.out.println("  - Archivo anterior conservado para histórico: " + archivoAnterior);
                 }
             } else {
                 System.out.println("  - Conservando archivo anterior");
@@ -391,10 +453,12 @@ public class TokenServlet extends HttpServlet {
         token.setNumdnitokcon(dniConfirma);
         token.setUniemptokcon(empConfirma.getCempCoDepend());
         token.setFlgtokcon(tieneToken);
-        token.setEsttokcon(1);
+        token.setEsttokcon(estadoToken);
 
         if (estadoToken == 4 && unidadEntregaStr != null && !unidadEntregaStr.isEmpty()) {
             token.setUnienttokcon(Integer.parseInt(unidadEntregaStr));
+        } else {
+            token.setUnienttokcon(null);
         }
 
         token.setFecentcon(java.sql.Date.valueOf(fechaEntrega));
@@ -458,6 +522,8 @@ public class TokenServlet extends HttpServlet {
 
         if (estadoToken == 4 && unidadEntregaStr != null && !unidadEntregaStr.isEmpty()) {
             token.setUnienttokcon2(Integer.parseInt(unidadEntregaStr));
+        } else {
+            token.setUnienttokcon2(null);
         }
 
         token.setFecentcon2(java.sql.Date.valueOf(fechaEntrega));
@@ -552,6 +618,9 @@ public class TokenServlet extends HttpServlet {
                 json.append(",\"codempcon\":").append(token.getCodempcon());
                 json.append(",\"dniConf1\":\"").append(escapeJson(token.getNumdnitokcon())).append("\"");
                 json.append(",\"tieneTokenConf1\":\"").append(escapeJson(token.getFlgTokConTexto())).append("\"");
+                if (token.getFlgtokcon() != null) {
+                    json.append(",\"tieneTokenConf1Valor\":").append(token.getFlgtokcon());
+                }
 
                 // ⭐ CRÍTICO: Incluir el documento de confirmación 1
                 if (token.getDocSustentoEntrega() != null && !token.getDocSustentoEntrega().isEmpty()) {
@@ -562,6 +631,11 @@ public class TokenServlet extends HttpServlet {
 
                 if (token.getEsttokcon() != null) {
                     json.append(",\"estadoTokenConf1\":\"").append(escapeJson(getEstadoTexto(token.getEsttokcon()))).append("\"");
+                    json.append(",\"estadoTokenConf1Valor\":").append(token.getEsttokcon());
+                }
+
+                if (token.getUnienttokcon() != null) {
+                    json.append(",\"unidadEntregaConf1\":").append(token.getUnienttokcon());
                 }
 
                 // Fecha de confirmación 1
@@ -690,9 +764,21 @@ public class TokenServlet extends HttpServlet {
             return;
         }
 
-        File file = new File(UPLOAD_DIR + File.separator + fileName);
+        if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
+            response.sendError(400, "Nombre de archivo inválido");
+            return;
+        }
 
-        if (!file.exists()) {
+        File file = null;
+        for (String directory : getReadableDirectories()) {
+            File candidate = new File(directory, fileName);
+            if (candidate.exists() && candidate.isFile()) {
+                file = candidate;
+                break;
+            }
+        }
+
+        if (file == null) {
             response.sendError(404, "Archivo no encontrado");
             return;
         }
@@ -727,13 +813,13 @@ public class TokenServlet extends HttpServlet {
             throw new IOException("El archivo no debe superar los 5MB");
         }
 
-        File uploadDir = new File(UPLOAD_DIR);
-        if (!uploadDir.exists()) {
-            uploadDir.mkdirs();
+        File uploadDirectory = new File(uploadDir);
+        if (!uploadDirectory.exists()) {
+            uploadDirectory.mkdirs();
         }
 
         String uniqueFileName = FileUtil.generateUniqueFileName(fileName);
-        String filePath = UPLOAD_DIR + File.separator + uniqueFileName;
+        String filePath = uploadDir + File.separator + uniqueFileName;
 
         filePart.write(filePath);
 

@@ -600,21 +600,34 @@
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Doc Sustento de entrega</label>
+                            <label>Doc Sustento de entrega registrado</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="text" class="form-control" id="docSustentoConf1" readonly style="flex: 1;" value="Sin archivo">
+                                <button type="button" class="btn btn-secondary" onclick="verArchivoModal('docSustentoConf1')" style="padding: 8px 16px;">
+                                    <i class="fas fa-file-pdf"></i> Ver
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha de entrega <span style="color: red;">(*)</span></label>
+                            <input type="date" name="fechaEntrega" id="fechaEntregaConf1" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nuevo Doc Sustento de entrega</label>
                             <input type="file" name="docSustentoEntrega" class="form-control" 
                                    accept=".pdf,.jpg,.jpeg,.png">
                             <small class="form-hint">PDF, JPG, PNG (Máx. 5MB)</small>
                         </div>
-                        <div class="form-group">
-                            <label>Fecha de entrega <span style="color: red;">(*)</span></label>
-                            <input type="date" name="fechaEntrega" class="form-control" required>
-                        </div>
+                        <div class="form-group"></div>
                     </div>
                     
                     <div class="form-row">
                         <div class="form-group" style="grid-column: 1 / -1;">
                             <label>Observaciones</label>
-                            <textarea name="observaciones" class="form-control" rows="3"></textarea>
+                            <textarea name="observaciones" id="observacionesConf1" class="form-control" rows="3"></textarea>
                         </div>
                     </div>
                 </div>
@@ -639,7 +652,7 @@
                             <label>DNI del Usuario al que se asignó <span style="color: red;">(*)</span></label>
                             <input type="text" name="dniConfirma2" class="form-control" 
                                    pattern="[0-9]{8}" maxlength="8" id="dniConf2"
-                                   onblur="buscarEmpleado(this.value, 'conf2')">
+                                   onblur="buscarEmpleado(this.value, 'conf2')" required>
                         </div>
                         <div class="form-group">
                             <label>Nombre</label>
@@ -661,7 +674,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>¿Tiene TOKEN? <span style="color: red;">(*)</span></label>
-                            <select name="tieneToken2" class="form-control">
+                            <select name="tieneToken2" class="form-control" required>
                                 <option value="">-- Seleccione --</option>
                                 <option value="1">SIN TOKEN</option>
                                 <option value="2">CON TOKEN</option>
@@ -702,7 +715,7 @@
                         </div>
                         <div class="form-group">
                             <label>Fecha de entrega <span style="color: red;">(*)</span></label>
-                            <input type="date" name="fechaEntrega2" class="form-control">
+                            <input type="date" name="fechaEntrega2" class="form-control" required>
                         </div>
                     </div>
                     
@@ -718,7 +731,7 @@
                     <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalConfirmarToken')">
                         <i class="fas fa-times"></i> REGRESAR
                     </button>
-                    <button type="submit" class="btn btn-success">
+                    <button type="submit" class="btn btn-success" id="btnGuardarConfirmacion">
                         <i class="fas fa-save"></i> GRABAR
                     </button>
                 </div>

@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Prevenir envío múltiple de formularios
     prevenirEnvioMultiple();
+
+    // Validaciones específicas de confirmación final
+    configurarValidacionConfirmacion();
     
     // Configurar fecha máxima en campos de fecha
     configurarFechas();
@@ -329,6 +332,10 @@ function mostrarFormularioConfirmacion(id, data) {
         console.log('→ Mostrando formulario de Confirmacion Inicial');
         
         document.getElementById('actionConfirmar').value = 'confirmar1';
+        const btnGuardar = document.getElementById('btnGuardarConfirmacion');
+        if (btnGuardar) {
+            btnGuardar.innerHTML = '<i class="fas fa-save"></i> GRABAR CONFIRMACIÓN INICIAL';
+        }
         seccionInicial.style.display = 'block';
         seccionFinal.style.display = 'none';
         
@@ -345,6 +352,9 @@ function mostrarFormularioConfirmacion(id, data) {
                 el.value = '';
             }
         });
+        const docConf1 = document.getElementById('docSustentoConf1');
+        if (docConf1) docConf1.value = 'Sin archivo';
+        mostrarUnidad('', '1');
         
         // Marcar campos requeridos
         seccionInicial.querySelectorAll('[required]').forEach(el => el.required = true);
@@ -355,9 +365,16 @@ function mostrarFormularioConfirmacion(id, data) {
         console.log('→ Mostrando formulario de Confirmacion Final');
         
         document.getElementById('actionConfirmar').value = 'confirmar2';
+        const btnGuardar = document.getElementById('btnGuardarConfirmacion');
+        if (btnGuardar) {
+            btnGuardar.innerHTML = '<i class="fas fa-save"></i> GRABAR CONFIRMACIÓN FINAL';
+        }
         seccionInicial.style.display = 'block';
         seccionFinal.style.display = 'block';
         
+        // Precargar datos de confirmación inicial antes de bloquear campos
+        llenarDatosConfirmacionInicial(data);
+
         // Deshabilitar todos los campos de confirmación 1
         seccionInicial.querySelectorAll('input, select, textarea').forEach(el => {
             el.disabled = true;
@@ -368,8 +385,7 @@ function mostrarFormularioConfirmacion(id, data) {
         document.getElementById('datoDniConf1').textContent = data.dniConf1 || '-';
         document.getElementById('datoTieneConf1').textContent = data.tieneTokenConf1 || '-';
         document.getElementById('datoEstadoConf1').textContent = data.estadoTokenConf1 || '-';
-        
-       
+
         // Habilitar campos de confirmación 2
         seccionFinal.querySelectorAll('input, select, textarea').forEach(el => {
             if (!el.readOnly && el.type !== 'button') {
@@ -393,6 +409,57 @@ function mostrarFormularioConfirmacion(id, data) {
     }
     
     mostrarModal('modalConfirmarToken');
+}
+
+function convertirAFechaInput(valor) {
+    if (!valor) return '';
+    try {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) return valor;
+        return new Date(valor).toISOString().split('T')[0];
+    } catch (e) {
+        return valor;
+    }
+}
+
+function llenarDatosConfirmacionInicial(data) {
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value || '';
+    };
+
+    const dni = data.dniConf1 || data.dni || '';
+    setValue('dniConf1', dni);
+    setValue('nombreConf1', data.nombre || '');
+    setValue('estadoConf1', data.estado || '');
+    setValue('dependenciaConf1', data.dependencia || '');
+
+    const selectTiene = document.querySelector('select[name="tieneToken"]');
+    if (selectTiene) {
+        selectTiene.value = data.tieneTokenConf1Valor ? String(data.tieneTokenConf1Valor) : '';
+    }
+
+    const selectEstado = document.querySelector('select[name="estadoToken"]');
+    if (selectEstado) {
+        selectEstado.value = data.estadoTokenConf1Valor ? String(data.estadoTokenConf1Valor) : '';
+        mostrarUnidad(selectEstado.value, '1');
+    }
+
+    const selectUnidad = document.querySelector('select[name="unidadEntrega"]');
+    if (selectUnidad) {
+        selectUnidad.value = data.unidadEntregaConf1 ? String(data.unidadEntregaConf1) : '';
+    }
+
+    const docConf1 = document.getElementById('docSustentoConf1');
+    if (docConf1) {
+        docConf1.value = data.docSustentoEntrega || 'Sin archivo';
+    }
+
+    const fechaConf1 = document.getElementById('fechaEntregaConf1');
+    if (fechaConf1) {
+        fechaConf1.value = convertirAFechaInput(data.fechaConf1);
+    }
+
+    setValue('observacionesConf1', data.obsConf1 || '');
 }
 
 // ========== VER DETALLE ==========
@@ -707,6 +774,39 @@ function prevenirEnvioMultiple() {
                 }, 5000);
             }
         });
+    });
+}
+
+function configurarValidacionConfirmacion() {
+    const form = document.getElementById('formConfirmarToken');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+        const action = document.getElementById('actionConfirmar')?.value;
+        if (action !== 'confirmar2') return;
+
+        const dni = document.getElementById('dniConf2')?.value?.trim() || '';
+        const tieneToken = document.querySelector('select[name="tieneToken2"]')?.value || '';
+        const estadoToken = document.querySelector('select[name="estadoToken2"]')?.value || '';
+        const fechaEntrega = document.querySelector('input[name="fechaEntrega2"]')?.value || '';
+        const unidadEntrega = document.querySelector('select[name="unidadEntrega2"]')?.value || '';
+
+        if (!/^\d{8}$/.test(dni)) {
+            e.preventDefault();
+            alert('Debe ingresar un DNI válido (8 dígitos) para la confirmación final.');
+            return;
+        }
+
+        if (!tieneToken || !estadoToken || !fechaEntrega) {
+            e.preventDefault();
+            alert('Complete todos los campos obligatorios de la confirmación final.');
+            return;
+        }
+
+        if (estadoToken === '4' && !unidadEntrega) {
+            e.preventDefault();
+            alert('Debe seleccionar la unidad de entrega cuando el estado es "ENTREGADO A UNIDAD ANTERIOR".');
+        }
     });
 }
 

@@ -458,6 +458,17 @@ public class TokenDAO {
             sql.append("AND at.fecaccion <= ? ");
         }
 
+        if (!isAdmin) {
+            sql.append("AND ((substr(d.de_dependencia, 1, strpos(d.de_dependencia, ' ') -1) = ");
+            sql.append("(SELECT substr(dep.de_dependencia, 1, strpos(dep.de_dependencia, ' ') -1) ");
+            sql.append("FROM rhtm_dependencia dep INNER JOIN rhtm_per_empleados emp ");
+            sql.append("ON dep.co_dependencia = emp.cemp_co_depend WHERE emp.cemp_co_emp = ?)) ");
+            sql.append("OR (substr(d2.de_dependencia, 1, strpos(d2.de_dependencia, ' ') -1) = ");
+            sql.append("(SELECT substr(dep.de_dependencia, 1, strpos(dep.de_dependencia, ' ') -1) ");
+            sql.append("FROM rhtm_dependencia dep INNER JOIN rhtm_per_empleados emp ");
+            sql.append("ON dep.co_dependencia = emp.cemp_co_depend WHERE emp.cemp_co_emp = ?))) ");
+        }
+
         sql.append("ORDER BY at.fecaccion DESC");
 
         try (Connection conn = DatabaseConfig.getConnection();
@@ -475,6 +486,11 @@ public class TokenDAO {
 
             if (fechaHasta != null && !fechaHasta.trim().isEmpty()) {
                 ps.setDate(paramIndex++, java.sql.Date.valueOf(fechaHasta));
+            }
+
+            if (!isAdmin) {
+                ps.setInt(paramIndex++, codigoEmpleado);
+                ps.setInt(paramIndex++, codigoEmpleado);
             }
 
             try (ResultSet rs = ps.executeQuery()) {
@@ -496,7 +512,7 @@ public class TokenDAO {
     }
 
     public int contarOperativos() {
-        return contar("SELECT COUNT(*) FROM t_m_asigna_token WHERE estado = 1");
+        return contar("SELECT COUNT(*) FROM t_m_asigna_token WHERE estado = 1 AND esttoken = 1");
     }
 
     public int contarPendientes() {
@@ -507,7 +523,7 @@ public class TokenDAO {
     }
 
     public int contarConProblemas() {
-        return contar("SELECT COUNT(*) FROM t_m_asigna_token WHERE estado = 1 AND esttokcon = 3");
+        return contar("SELECT COUNT(*) FROM t_m_asigna_token WHERE estado = 1 AND esttoken IN (2, 3)");
     }
 
     public int contarCompletos() {
@@ -552,7 +568,6 @@ public class TokenDAO {
             }
 
             Integer codempcon2 = (Integer) rs.getObject("codempcon2");
-            System.out.println("codempcon2: " + codempcon2);
             if (codempcon2 != null) {
                 token.setCodempcon2(codempcon2);
             }

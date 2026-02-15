@@ -72,6 +72,30 @@ public class EmpleadoDAO {
     }
     
     /**
+     * Contar registros de tokens recibidos para un DNI
+     */
+    public int contarRegistrosRecibidosPorDNI(String dni) {
+        String sql = "SELECT COUNT(*) FROM t_m_asigna_token WHERE dniemprec = ? AND estado = 1";
+        
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, dni);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("✗ Error al contar tokens recibidos: " + e.getMessage());
+        }
+        
+        return 0;
+    }
+    
+    /**
      * Obtener empleado por código
      */
     public Empleado obtenerPorCodigo(int codigo) {
