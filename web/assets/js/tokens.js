@@ -51,20 +51,6 @@ function normalizarFechaInput(valor) {
     return '';
 }
 
-function formatearFechaVisual(valor) {
-    const fechaNormalizada = normalizarFechaInput(valor);
-    if (!fechaNormalizada) {
-        return valor ? String(valor) : '';
-    }
-
-    const partes = fechaNormalizada.split('-');
-    if (partes.length !== 3) {
-        return fechaNormalizada;
-    }
-
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
-}
-
 // ========== MODALES ==========
 function mostrarModal(idModal) {
     const modal = document.getElementById(idModal);
@@ -445,17 +431,11 @@ function mostrarFormularioConfirmacion(id, data) {
         const inputFechaEntrega1 = seccionInicial.querySelector('input[name="fechaEntrega"]');
         if (inputFechaEntrega1) {
             const fechaNormalizadaConf1 = normalizarFechaInput(data.fechaConf1);
-            if (fechaNormalizadaConf1) {
-                inputFechaEntrega1.type = 'date';
-                inputFechaEntrega1.value = fechaNormalizadaConf1;
-                inputFechaEntrega1.setAttribute('value', fechaNormalizadaConf1);
-                inputFechaEntrega1.placeholder = '';
-            } else {
-                inputFechaEntrega1.type = 'text';
-                inputFechaEntrega1.value = formatearFechaVisual(data.fechaConf1);
-                inputFechaEntrega1.setAttribute('value', formatearFechaVisual(data.fechaConf1));
-                inputFechaEntrega1.placeholder = 'Sin fecha registrada';
-            }
+            inputFechaEntrega1.type = 'date';
+            inputFechaEntrega1.value = fechaNormalizadaConf1;
+            inputFechaEntrega1.setAttribute('value', fechaNormalizadaConf1);
+            inputFechaEntrega1.defaultValue = fechaNormalizadaConf1;
+            inputFechaEntrega1.placeholder = '';
         }
 
         const textareaObs1 = seccionInicial.querySelector('textarea[name="observaciones"]');
@@ -874,57 +854,3 @@ function validarBusqueda() {
 
 // ========== LOG ==========
 console.log('✓✓✓ tokens.js CORREGIDO completamente cargado y funcional ✓✓✓');
-
-
-function validarFormularioConfirmacion(event) {
-    const action = document.getElementById('actionConfirmar')?.value;
-    const hoy = new Date().toISOString().split('T')[0];
-
-    if (action === 'confirmar2') {
-        const dni1 = document.getElementById('dniConf1')?.value?.trim();
-        const dni2 = document.getElementById('dniConf2')?.value?.trim();
-        const fecha2 = document.querySelector('#seccionConfirmacionFinal input[name="fechaEntrega2"]')?.value;
-        const tiene2 = document.querySelector('#seccionConfirmacionFinal select[name="tieneToken2"]')?.value;
-        const estado2 = document.querySelector('#seccionConfirmacionFinal select[name="estadoToken2"]')?.value;
-        const unidad2 = document.querySelector('#seccionConfirmacionFinal select[name="unidadEntrega2"]')?.value;
-
-        if (!/^\d{8}$/.test(dni2 || '')) {
-            alert('En confirmación final, el DNI debe tener 8 dígitos.');
-            event.preventDefault();
-            return false;
-        }
-
-        if (dni1 && dni2 && dni1 === dni2) {
-            alert('El DNI de confirmación final no puede ser igual al DNI de confirmación inicial.');
-            event.preventDefault();
-            return false;
-        }
-
-        if (!tiene2 || !estado2 || !fecha2) {
-            alert('Complete todos los campos obligatorios de la confirmación final.');
-            event.preventDefault();
-            return false;
-        }
-
-        if (fecha2 > hoy) {
-            alert('La fecha de entrega final no puede ser mayor a hoy.');
-            event.preventDefault();
-            return false;
-        }
-
-        if (estado2 === '4' && !unidad2) {
-            alert('Debe seleccionar la unidad de entrega cuando el estado es ENTREGADO A UNIDAD ANTERIOR.');
-            event.preventDefault();
-            return false;
-        }
-    }
-
-    return true;
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const formConfirmar = document.getElementById('formConfirmarToken');
-    if (formConfirmar) {
-        formConfirmar.addEventListener('submit', validarFormularioConfirmacion);
-    }
-});
