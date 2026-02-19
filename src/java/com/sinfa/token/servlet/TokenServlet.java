@@ -564,6 +564,10 @@ public class TokenServlet extends HttpServlet {
                     json.append(",\"estadoTokenConf1\":\"").append(escapeJson(getEstadoTexto(token.getEsttokcon()))).append("\"");
                 }
 
+                if (token.getUnienttokcon() != null) {
+                    json.append(",\"unidadEntregaConf1\":").append(token.getUnienttokcon());
+                }
+
                 // Fecha de confirmación 1
                 if (token.getFecentcon() != null) {
                     json.append(",\"fechaConf1\":\"").append(token.getFecentcon().toString()).append("\"");

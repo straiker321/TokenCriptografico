@@ -601,9 +601,19 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Doc Sustento de entrega</label>
-                            <input type="file" name="docSustentoEntrega" class="form-control" 
-                                   accept=".pdf,.jpg,.jpeg,.png">
-                            <small class="form-hint">PDF, JPG, PNG (Máx. 5MB)</small>
+                            <div id="docSustentoEntregaCarga">
+                                <input type="file" name="docSustentoEntrega" class="form-control" 
+                                       accept=".pdf,.jpg,.jpeg,.png">
+                                <small class="form-hint">PDF, JPG, PNG (Máx. 5MB)</small>
+                            </div>
+                            <div id="docSustentoEntregaVista" style="display: none;">
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <input type="text" class="form-control" id="docSustentoEntregaActual" readonly style="flex: 1;">
+                                    <button type="button" class="btn btn-secondary" onclick="verArchivoModal('docSustentoEntregaActual')" style="padding: 8px 16px;">
+                                        <i class="fas fa-file-pdf"></i> Ver
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Fecha de entrega <span style="color: red;">(*)</span></label>
