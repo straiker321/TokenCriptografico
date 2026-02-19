@@ -28,6 +28,29 @@ document.addEventListener('DOMContentLoaded', function() {
     configurarFechas();
 });
 
+
+function normalizarFechaInput(valor) {
+    if (!valor) return '';
+
+    const fechaTexto = String(valor).trim();
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fechaTexto)) {
+        return fechaTexto;
+    }
+
+    const matchFecha = fechaTexto.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (matchFecha) {
+        return matchFecha[1];
+    }
+
+    const fecha = new Date(fechaTexto);
+    if (!isNaN(fecha.getTime())) {
+        return fecha.toISOString().split('T')[0];
+    }
+
+    return '';
+}
+
 // ========== MODALES ==========
 function mostrarModal(idModal) {
     const modal = document.getElementById(idModal);
@@ -265,23 +288,11 @@ function mostrarFormularioEdicionAdmin(id, data) {
     // Documento sustento actual
     document.getElementById('docSustentoActual').value = data.docSustento || 'Sin archivo';
     
-    // Fecha de acción - Convertir si viene en formato ISO
+    // Fecha de acción
     if (data.fechaAccion) {
-        try {
-            // Si ya viene en formato yyyy-MM-dd, usar directamente
-            if (data.fechaAccion.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                document.getElementById('fechaAccionEdit').value = data.fechaAccion;
-            } else {
-                // Si viene en otro formato, intentar convertir
-                const fecha = new Date(data.fechaAccion);
-                const fechaFormateada = fecha.toISOString().split('T')[0];
-                document.getElementById('fechaAccionEdit').value = fechaFormateada;
-            }
-            console.log('  - Fecha acción:', data.fechaAccion);
-        } catch (e) {
-            console.error('Error al parsear fecha:', e);
-            document.getElementById('fechaAccionEdit').value = data.fechaAccion || '';
-        }
+        const fechaFormateada = normalizarFechaInput(data.fechaAccion);
+        document.getElementById('fechaAccionEdit').value = fechaFormateada;
+        console.log('  - Fecha acción:', data.fechaAccion, '=>', fechaFormateada);
     }
     
     console.log('✓ Formulario de edición ADMIN llenado');
@@ -311,15 +322,9 @@ function mostrarFormularioConfirmacion(id, data) {
     document.getElementById('accionTokenReg').value = data.accion || '';
     document.getElementById('docSustentoReg').value = data.docSustento || '';
     
-    // Convertir fecha si viene en formato ISO
+    // Fecha de acción (normalizada para input type="date")
     if (data.fechaAccion) {
-        try {
-            const fecha = new Date(data.fechaAccion);
-            const fechaFormateada = fecha.toISOString().split('T')[0];
-            document.getElementById('fechaAccionReg').value = fechaFormateada;
-        } catch (e) {
-            document.getElementById('fechaAccionReg').value = data.fechaAccion;
-        }
+        document.getElementById('fechaAccionReg').value = normalizarFechaInput(data.fechaAccion);
     }
     
     const seccionInicial = document.getElementById('seccionConfirmacionInicial');
@@ -419,7 +424,7 @@ function mostrarFormularioConfirmacion(id, data) {
 
         const inputFechaEntrega1 = seccionInicial.querySelector('input[name="fechaEntrega"]');
         if (inputFechaEntrega1) {
-            inputFechaEntrega1.value = data.fechaConf1 || '';
+            inputFechaEntrega1.value = normalizarFechaInput(data.fechaConf1);
         }
 
         const textareaObs1 = seccionInicial.querySelector('textarea[name="observaciones"]');
