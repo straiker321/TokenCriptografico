@@ -357,13 +357,35 @@ public class TokenServlet extends HttpServlet {
 
         System.out.println("→ Registrando primera confirmación por: " + usuario.getUsername());
 
-        int idToken = Integer.parseInt(request.getParameter("idToken"));
+        Integer idToken = parseEnteroSeguro(request.getParameter("idToken"));
         String dniConfirma = request.getParameter("dniConfirma");
-        int tieneToken = Integer.parseInt(request.getParameter("tieneToken"));
-        int estadoToken = Integer.parseInt(request.getParameter("estadoToken"));
+        Integer tieneToken = parseEnteroSeguro(request.getParameter("tieneToken"));
+        Integer estadoToken = parseEnteroSeguro(request.getParameter("estadoToken"));
         String fechaEntrega = request.getParameter("fechaEntrega");
+        java.sql.Date fechaEntregaDate = parseFechaSeguro(fechaEntrega);
         String observaciones = request.getParameter("observaciones");
         String unidadEntregaStr = request.getParameter("unidadEntrega");
+
+        if (idToken == null || !ValidationUtil.isValidDNI(dniConfirma)
+                || tieneToken == null || (tieneToken != 1 && tieneToken != 2)
+                || estadoToken == null || estadoToken < 1 || estadoToken > 4
+                || fechaEntregaDate == null) {
+            request.setAttribute("error", "Datos inválidos en confirmación inicial");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        if (esFechaFutura(fechaEntregaDate)) {
+            request.setAttribute("error", "La fecha de entrega inicial no puede ser futura");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        if (estadoToken == 4 && (unidadEntregaStr == null || unidadEntregaStr.isEmpty())) {
+            request.setAttribute("error", "Seleccione unidad de entrega para estado ENTREGADO A UNIDAD ANTERIOR");
+            listarTokens(request, response, usuario);
+            return;
+        }
 
         Empleado empConfirma = empleadoDAO.buscarPorDNI(dniConfirma);
         if (empConfirma == null) {
@@ -385,19 +407,25 @@ public class TokenServlet extends HttpServlet {
             return;
         }
 
+        if (token.getCodempcon() != null) {
+            request.setAttribute("error", "El token ya cuenta con confirmación inicial registrada");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
         token.setCodempcon(usuario.getCempCoEmp());
         token.setUniconfirma(dependenciaDAO.obtenerCodigoDependenciaUsuario(usuario.getCempCoEmp()));
         token.setCodemptokcon(empConfirma.getCempCoEmp());
         token.setNumdnitokcon(dniConfirma);
         token.setUniemptokcon(empConfirma.getCempCoDepend());
         token.setFlgtokcon(tieneToken);
-        token.setEsttokcon(1);
+        token.setEsttokcon(estadoToken);
 
         if (estadoToken == 4 && unidadEntregaStr != null && !unidadEntregaStr.isEmpty()) {
             token.setUnienttokcon(Integer.parseInt(unidadEntregaStr));
         }
 
-        token.setFecentcon(java.sql.Date.valueOf(fechaEntrega));
+        token.setFecentcon(fechaEntregaDate);
         token.setTxtobscon(observaciones);
         token.setDocSustentoEntrega(nombreArchivo);
         token.setUsumod(usuario.getIdUsuario());
@@ -412,7 +440,12 @@ public class TokenServlet extends HttpServlet {
 
         System.out.println("→ Registrando segunda confirmación por: " + usuario.getUsername());
 
-        int idToken = Integer.parseInt(request.getParameter("idToken"));
+        Integer idToken = parseEnteroSeguro(request.getParameter("idToken"));
+        if (idToken == null) {
+            request.setAttribute("error", "ID de token inválido");
+            listarTokens(request, response, usuario);
+            return;
+        }
 
         Token token = tokenDAO.obtenerPorId(idToken);
         if (token == null) {
@@ -427,12 +460,46 @@ public class TokenServlet extends HttpServlet {
             return;
         }
 
+        if (token.getCodempcon() == null) {
+            request.setAttribute("error", "No puede registrar confirmación final sin confirmación inicial");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        if (token.getCodempcon2() != null) {
+            request.setAttribute("error", "El token ya tiene confirmación final registrada");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
         String dniConfirma = request.getParameter("dniConfirma2");
-        int tieneToken = Integer.parseInt(request.getParameter("tieneToken2"));
-        int estadoToken = Integer.parseInt(request.getParameter("estadoToken2"));
+        Integer tieneToken = parseEnteroSeguro(request.getParameter("tieneToken2"));
+        Integer estadoToken = parseEnteroSeguro(request.getParameter("estadoToken2"));
         String fechaEntrega = request.getParameter("fechaEntrega2");
+        java.sql.Date fechaEntregaDate = parseFechaSeguro(fechaEntrega);
         String observaciones = request.getParameter("observaciones2");
         String unidadEntregaStr = request.getParameter("unidadEntrega2");
+
+        if (!ValidationUtil.isValidDNI(dniConfirma)
+                || tieneToken == null || (tieneToken != 1 && tieneToken != 2)
+                || estadoToken == null || estadoToken < 1 || estadoToken > 4
+                || fechaEntregaDate == null) {
+            request.setAttribute("error", "Datos inválidos en confirmación final");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        if (esFechaFutura(fechaEntregaDate)) {
+            request.setAttribute("error", "La fecha de entrega final no puede ser futura");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        if (estadoToken == 4 && (unidadEntregaStr == null || unidadEntregaStr.isEmpty())) {
+            request.setAttribute("error", "Seleccione unidad de entrega para estado ENTREGADO A UNIDAD ANTERIOR");
+            listarTokens(request, response, usuario);
+            return;
+        }
 
         Empleado empConfirma = empleadoDAO.buscarPorDNI(dniConfirma);
         if (empConfirma == null) {
@@ -460,7 +527,7 @@ public class TokenServlet extends HttpServlet {
             token.setUnienttokcon2(Integer.parseInt(unidadEntregaStr));
         }
 
-        token.setFecentcon2(java.sql.Date.valueOf(fechaEntrega));
+        token.setFecentcon2(fechaEntregaDate);
         token.setTxtobscon2(observaciones);
         token.setDocSustentoFinal(nombreArchivo);
         token.setUsumod(usuario.getIdUsuario());
@@ -476,6 +543,30 @@ public class TokenServlet extends HttpServlet {
 
         response.sendRedirect("tokens");
 
+    }
+
+
+    private Integer parseEnteroSeguro(String valor) {
+        try {
+            return Integer.valueOf(valor);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private java.sql.Date parseFechaSeguro(String valor) {
+        try {
+            return java.sql.Date.valueOf(valor);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private boolean esFechaFutura(java.sql.Date fecha) {
+        if (fecha == null) {
+            return false;
+        }
+        return fecha.after(new java.sql.Date(System.currentTimeMillis()));
     }
 
     private void buscarEmpleadoPorDNI(HttpServletRequest request, HttpServletResponse response)
@@ -562,6 +653,10 @@ public class TokenServlet extends HttpServlet {
 
                 if (token.getEsttokcon() != null) {
                     json.append(",\"estadoTokenConf1\":\"").append(escapeJson(getEstadoTexto(token.getEsttokcon()))).append("\"");
+                }
+
+                if (token.getUnienttokcon() != null) {
+                    json.append(",\"unidadEntregaConf1\":").append(token.getUnienttokcon());
                 }
 
                 // Fecha de confirmación 1
