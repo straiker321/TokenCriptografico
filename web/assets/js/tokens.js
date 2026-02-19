@@ -28,6 +28,29 @@ document.addEventListener('DOMContentLoaded', function() {
     configurarFechas();
 });
 
+
+function normalizarFechaInput(valor) {
+    if (!valor) return '';
+
+    const fechaTexto = String(valor).trim();
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fechaTexto)) {
+        return fechaTexto;
+    }
+
+    const matchFecha = fechaTexto.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (matchFecha) {
+        return matchFecha[1];
+    }
+
+    const fecha = new Date(fechaTexto);
+    if (!isNaN(fecha.getTime())) {
+        return fecha.toISOString().split('T')[0];
+    }
+
+    return '';
+}
+
 // ========== MODALES ==========
 function mostrarModal(idModal) {
     const modal = document.getElementById(idModal);
@@ -69,6 +92,14 @@ function cerrarModal(idModal) {
             const rowUnidad2 = document.getElementById('rowUnidad2');
             if (rowUnidad1) rowUnidad1.style.display = 'none';
             if (rowUnidad2) rowUnidad2.style.display = 'none';
+
+            // Restaurar bloque de documento de confirmación inicial
+            const docSustentoEntregaCarga = document.getElementById('docSustentoEntregaCarga');
+            const docSustentoEntregaVista = document.getElementById('docSustentoEntregaVista');
+            const docSustentoEntregaActual = document.getElementById('docSustentoEntregaActual');
+            if (docSustentoEntregaCarga) docSustentoEntregaCarga.style.display = 'block';
+            if (docSustentoEntregaVista) docSustentoEntregaVista.style.display = 'none';
+            if (docSustentoEntregaActual) docSustentoEntregaActual.value = '';
         }
         
         console.log('✓ Modal cerrado:', idModal);
@@ -257,23 +288,11 @@ function mostrarFormularioEdicionAdmin(id, data) {
     // Documento sustento actual
     document.getElementById('docSustentoActual').value = data.docSustento || 'Sin archivo';
     
-    // Fecha de acción - Convertir si viene en formato ISO
+    // Fecha de acción
     if (data.fechaAccion) {
-        try {
-            // Si ya viene en formato yyyy-MM-dd, usar directamente
-            if (data.fechaAccion.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                document.getElementById('fechaAccionEdit').value = data.fechaAccion;
-            } else {
-                // Si viene en otro formato, intentar convertir
-                const fecha = new Date(data.fechaAccion);
-                const fechaFormateada = fecha.toISOString().split('T')[0];
-                document.getElementById('fechaAccionEdit').value = fechaFormateada;
-            }
-            console.log('  - Fecha acción:', data.fechaAccion);
-        } catch (e) {
-            console.error('Error al parsear fecha:', e);
-            document.getElementById('fechaAccionEdit').value = data.fechaAccion || '';
-        }
+        const fechaFormateada = normalizarFechaInput(data.fechaAccion);
+        document.getElementById('fechaAccionEdit').value = fechaFormateada;
+        console.log('  - Fecha acción:', data.fechaAccion, '=>', fechaFormateada);
     }
     
     console.log('✓ Formulario de edición ADMIN llenado');
@@ -303,19 +322,16 @@ function mostrarFormularioConfirmacion(id, data) {
     document.getElementById('accionTokenReg').value = data.accion || '';
     document.getElementById('docSustentoReg').value = data.docSustento || '';
     
-    // Convertir fecha si viene en formato ISO
+    // Fecha de acción (normalizada para input type="date")
     if (data.fechaAccion) {
-        try {
-            const fecha = new Date(data.fechaAccion);
-            const fechaFormateada = fecha.toISOString().split('T')[0];
-            document.getElementById('fechaAccionReg').value = fechaFormateada;
-        } catch (e) {
-            document.getElementById('fechaAccionReg').value = data.fechaAccion;
-        }
+        document.getElementById('fechaAccionReg').value = normalizarFechaInput(data.fechaAccion);
     }
     
     const seccionInicial = document.getElementById('seccionConfirmacionInicial');
     const seccionFinal = document.getElementById('seccionConfirmacionFinal');
+    const docSustentoEntregaCarga = document.getElementById('docSustentoEntregaCarga');
+    const docSustentoEntregaVista = document.getElementById('docSustentoEntregaVista');
+    const docSustentoEntregaActual = document.getElementById('docSustentoEntregaActual');
     
     // Determinar qué mostrar según el estado del token
     const tieneInicial = data.codempcon !== undefined && data.codempcon !== null && data.codempcon > 0;
@@ -338,6 +354,11 @@ function mostrarFormularioConfirmacion(id, data) {
                 el.disabled = false;
             }
         });
+
+        // Mostrar carga de archivo para confirmación inicial
+        if (docSustentoEntregaCarga) docSustentoEntregaCarga.style.display = 'block';
+        if (docSustentoEntregaVista) docSustentoEntregaVista.style.display = 'none';
+        if (docSustentoEntregaActual) docSustentoEntregaActual.value = '';
         
         // Limpiar campos
         seccionInicial.querySelectorAll('input:not([readonly]), select, textarea').forEach(el => {
@@ -358,12 +379,65 @@ function mostrarFormularioConfirmacion(id, data) {
         seccionInicial.style.display = 'block';
         seccionFinal.style.display = 'block';
         
-        // Deshabilitar todos los campos de confirmación 1
+        // Deshabilitar campos editables de confirmación 1, pero mantenerlos visibles
         seccionInicial.querySelectorAll('input, select, textarea').forEach(el => {
-            el.disabled = true;
+            if (el.name && el.name !== 'idToken') {
+                el.disabled = true;
+            }
         });
         seccionInicial.querySelectorAll('[required]').forEach(el => el.required = false);
-        
+
+        // Mostrar datos de confirmación inicial en modo estático
+        document.getElementById('dniConf1').value = data.dniConf1 || '';
+        document.getElementById('nombreConf1').value = data.nombreConf1 || '';
+        document.getElementById('estadoConf1').value = data.estadoConf1 || '';
+        document.getElementById('dependenciaConf1').value = data.dependenciaConf1 || '';
+
+        // Si el backend no envía nombre/estado/dependencia, completar por DNI
+        if (data.dniConf1 && (!data.nombreConf1 || !data.dependenciaConf1)) {
+            buscarEmpleado(data.dniConf1, 'conf1');
+        }
+
+        if (data.tieneTokenConf1) {
+            const selectTieneToken1 = seccionInicial.querySelector('select[name="tieneToken"]');
+            if (selectTieneToken1) {
+                const option = Array.from(selectTieneToken1.options).find(opt => opt.text.trim() === data.tieneTokenConf1.trim());
+                if (option) selectTieneToken1.value = option.value;
+            }
+        }
+
+        if (data.estadoTokenConf1) {
+            const selectEstadoToken1 = seccionInicial.querySelector('select[name="estadoToken"]');
+            if (selectEstadoToken1) {
+                const option = Array.from(selectEstadoToken1.options).find(opt => opt.text.trim() === data.estadoTokenConf1.trim());
+                if (option) {
+                    selectEstadoToken1.value = option.value;
+                    mostrarUnidad(selectEstadoToken1.value, '1');
+                }
+            }
+        }
+
+        const selectUnidad1 = seccionInicial.querySelector('select[name="unidadEntrega"]');
+        if (selectUnidad1 && data.unidadEntregaConf1) {
+            selectUnidad1.value = data.unidadEntregaConf1;
+        }
+
+        const inputFechaEntrega1 = seccionInicial.querySelector('input[name="fechaEntrega"]');
+        if (inputFechaEntrega1) {
+            inputFechaEntrega1.value = normalizarFechaInput(data.fechaConf1);
+        }
+
+        const textareaObs1 = seccionInicial.querySelector('textarea[name="observaciones"]');
+        if (textareaObs1) {
+            textareaObs1.value = data.obsConf1 || '';
+        }
+
+        if (docSustentoEntregaActual) {
+            docSustentoEntregaActual.value = data.docSustentoEntrega || 'Sin archivo';
+        }
+        if (docSustentoEntregaCarga) docSustentoEntregaCarga.style.display = 'none';
+        if (docSustentoEntregaVista) docSustentoEntregaVista.style.display = 'block';
+
         // Mostrar datos de la primera confirmación en resumen
         document.getElementById('datoDniConf1').textContent = data.dniConf1 || '-';
         document.getElementById('datoTieneConf1').textContent = data.tieneTokenConf1 || '-';
