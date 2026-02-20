@@ -329,6 +329,12 @@ public class TokenServlet extends HttpServlet {
                 return;
             }
 
+            if (token.getEstado() == 0) {
+                request.setAttribute("error", "No puede editar un token oculto. Restaure primero.");
+                listarTokens(request, response, usuario);
+                return;
+            }
+
             // Actualizar datos básicos
             token.setUniregistra(unidadRegistra);
             token.setNumdnitok(dniUsuarioAsigna);
@@ -425,6 +431,12 @@ public class TokenServlet extends HttpServlet {
             listarTokens(request, response, usuario);
             return;
         }
+        if (token.getEstado() == 0) {
+            request.setAttribute("error", "No puede confirmar un token oculto");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
         if (token.getCodempcon() != null) {
             request.setAttribute("warning", "Este token ya tiene confirmación inicial");
             listarTokens(request, response, usuario);
@@ -453,7 +465,13 @@ public class TokenServlet extends HttpServlet {
         token.setEsttokcon(estadoToken);
 
         if (estadoToken == 4) {
-            token.setUnienttokcon(Integer.parseInt(unidadEntregaStr));
+            Integer unidadEntrega = parseEnteroSeguro(unidadEntregaStr);
+            if (unidadEntrega == null || unidadEntrega <= 0) {
+                request.setAttribute("error", "Unidad de entrega inválida");
+                listarTokens(request, response, usuario);
+                return;
+            }
+            token.setUnienttokcon(unidadEntrega);
         }
 
         token.setFecentcon(fechaEntregaDate);
@@ -480,6 +498,12 @@ public class TokenServlet extends HttpServlet {
         Token token = tokenDAO.obtenerPorId(idToken);
         if (token == null) {
             request.setAttribute("error", "Token no encontrado");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        if (token.getEstado() == 0) {
+            request.setAttribute("error", "No puede confirmar un token oculto");
             listarTokens(request, response, usuario);
             return;
         }
@@ -547,7 +571,13 @@ public class TokenServlet extends HttpServlet {
         token.setEsttokcon2(estadoToken);
 
         if (estadoToken == 4) {
-            token.setUnienttokcon2(Integer.parseInt(unidadEntregaStr));
+            Integer unidadEntrega = parseEnteroSeguro(unidadEntregaStr);
+            if (unidadEntrega == null || unidadEntrega <= 0) {
+                request.setAttribute("error", "Unidad de entrega inválida");
+                listarTokens(request, response, usuario);
+                return;
+            }
+            token.setUnienttokcon2(unidadEntrega);
         }
 
         token.setFecentcon2(fechaEntregaDate);
@@ -847,7 +877,37 @@ public class TokenServlet extends HttpServlet {
         String dni = request.getParameter("dni");
         String fechaDesde = request.getParameter("fechaDesde");
         String fechaHasta = request.getParameter("fechaHasta");
-       
+
+        if (dni != null && !dni.trim().isEmpty() && !ValidationUtil.isValidDNI(dni.trim())) {
+            request.setAttribute("error", "DNI de búsqueda inválido");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        java.sql.Date fechaDesdeDate = null;
+        java.sql.Date fechaHastaDate = null;
+        if (fechaDesde != null && !fechaDesde.trim().isEmpty()) {
+            fechaDesdeDate = parseFechaSeguro(fechaDesde.trim());
+            if (fechaDesdeDate == null) {
+                request.setAttribute("error", "Fecha desde inválida");
+                listarTokens(request, response, usuario);
+                return;
+            }
+        }
+        if (fechaHasta != null && !fechaHasta.trim().isEmpty()) {
+            fechaHastaDate = parseFechaSeguro(fechaHasta.trim());
+            if (fechaHastaDate == null) {
+                request.setAttribute("error", "Fecha hasta inválida");
+                listarTokens(request, response, usuario);
+                return;
+            }
+        }
+        if (fechaDesdeDate != null && fechaHastaDate != null && fechaDesdeDate.after(fechaHastaDate)) {
+            request.setAttribute("error", "Rango de fechas inválido");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
         List<Token> tokens = tokenDAO.buscar(dni, fechaDesde, fechaHasta, usuario.isAdmin(), usuario.getCempCoEmp());
         List<Dependencia> dependencias = dependenciaDAO.listarActivas();
 
@@ -869,7 +929,18 @@ public class TokenServlet extends HttpServlet {
             return;
         }
 
-        File file = new File(UPLOAD_DIR + File.separator + fileName);
+        fileName = fileName.trim();
+        if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\") || !FileUtil.isValidExtension(fileName)) {
+            response.sendError(400, "Nombre de archivo inválido");
+            return;
+        }
+
+        File baseDir = new File(UPLOAD_DIR).getCanonicalFile();
+        File file = new File(baseDir, fileName).getCanonicalFile();
+        if (!file.getPath().startsWith(baseDir.getPath())) {
+            response.sendError(400, "Ruta inválida");
+            return;
+        }
 
         if (!file.exists()) {
             response.sendError(404, "Archivo no encontrado");
