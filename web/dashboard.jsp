@@ -41,6 +41,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <div id="globalLoader" class="global-loader" style="display:none;">
+        <div class="loader-card">
+            <div class="loader-spinner"></div>
+            <p>Cargando módulo, por favor espere...</p>
+        </div>
+    </div>
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
