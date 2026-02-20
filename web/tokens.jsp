@@ -20,6 +20,7 @@
     String error = (String) request.getAttribute("error");
     String success = (String) request.getAttribute("success");
     String warning = (String) request.getAttribute("warning");
+    Object ultimoTokenOcultadoId = request.getAttribute("ultimoTokenOcultadoId");
 
     SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -119,6 +120,16 @@
             <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i> <%= success %>
                 <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+            </div>
+            <% } %>
+
+
+            <% if (isAdmin && ultimoTokenOcultadoId != null) { %>
+            <div class="alert alert-warning" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                <div><i class="fas fa-history"></i> Último token ocultado: #<%= ultimoTokenOcultadoId %></div>
+                <a class="btn btn-secondary" href="tokens?action=restore&id=<%= ultimoTokenOcultadoId %>">
+                    <i class="fas fa-undo"></i> Deshacer ocultado
+                </a>
             </div>
             <% } %>
 

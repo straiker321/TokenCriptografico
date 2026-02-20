@@ -156,6 +156,8 @@ public class TokenServlet extends HttpServlet {
 
         request.setAttribute("tokens", tokens);
         request.setAttribute("totalTokens", tokens.size());
+        Object ultimoTokenOcultadoId = request.getSession().getAttribute("ultimoTokenOcultadoId");
+        request.setAttribute("ultimoTokenOcultadoId", ultimoTokenOcultadoId);
         request.setAttribute("dependencias", dependenciaDAO.listarActivas());
 
         request.getRequestDispatcher("tokens.jsp").forward(request, response);
@@ -672,6 +674,10 @@ public class TokenServlet extends HttpServlet {
         boolean ok = tokenDAO.restaurar(idToken);
 
         if (ok) {
+            Object ultimoTokenOcultadoId = request.getSession().getAttribute("ultimoTokenOcultadoId");
+            if (ultimoTokenOcultadoId != null && String.valueOf(ultimoTokenOcultadoId).equals(String.valueOf(idToken))) {
+                request.getSession().removeAttribute("ultimoTokenOcultadoId");
+            }
             request.setAttribute("success", "✓ Token restaurado correctamente");
             System.out.println("✓ Token " + idToken + " restaurado por: " + usuario.getUsername());
         } else {
@@ -694,6 +700,7 @@ public class TokenServlet extends HttpServlet {
         boolean ok = tokenDAO.eliminar(idToken);
 
         if (ok) {
+            request.getSession().setAttribute("ultimoTokenOcultadoId", idToken);
             request.setAttribute("success", "✓ Token ocultado correctamente (el registro se conserva)");
             System.out.println("✓ Token " + idToken + " eliminado por: " + usuario.getUsername());
         } else {
