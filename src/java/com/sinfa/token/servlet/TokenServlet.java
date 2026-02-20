@@ -58,6 +58,8 @@ public class TokenServlet extends HttpServlet {
                 obtenerTokenJSON(request, response);
             } else if ("delete".equals(action)) {
                 eliminarToken(request, response, usuario);
+            } else if ("restore".equals(action)) {
+                restaurarToken(request, response, usuario);
             } else if ("buscar".equals(action)) {
                 buscarTokens(request, response, usuario);
             } else if ("download".equals(action)) {
@@ -120,9 +122,11 @@ public class TokenServlet extends HttpServlet {
 
         // ================= ADMIN GLOBAL =================
         if ("ADMINISTRADOR".equalsIgnoreCase(perfil)) {
+            boolean mostrarOcultos = "1".equals(request.getParameter("mostrarOcultos"));
 
             System.out.println("ROL: ADMIN GLOBAL → VE TODO");
-            tokens = tokenDAO.listarTodosAdmin();
+            tokens = tokenDAO.listarTodosAdmin(mostrarOcultos);
+            request.setAttribute("mostrarOcultos", mostrarOcultos);
 
         } // ================= IMPLEMENTADOR NO ADMIN =================
         else if ("IMPLEMENTADOR".equalsIgnoreCase(perfil)) {
@@ -652,6 +656,29 @@ public class TokenServlet extends HttpServlet {
                 .replace("\n", "\\n")
                 .replace("\r", "\\r")
                 .replace("\t", "\\t");
+    }
+
+
+    private void restaurarToken(HttpServletRequest request, HttpServletResponse response, Usuario usuario)
+            throws ServletException, IOException {
+
+        if (!usuario.isAdmin()) {
+            request.setAttribute("error", "Solo ADMIN puede restaurar");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        int idToken = Integer.parseInt(request.getParameter("id"));
+        boolean ok = tokenDAO.restaurar(idToken);
+
+        if (ok) {
+            request.setAttribute("success", "✓ Token restaurado correctamente");
+            System.out.println("✓ Token " + idToken + " restaurado por: " + usuario.getUsername());
+        } else {
+            request.setAttribute("error", "Error al restaurar token");
+        }
+
+        listarTokens(request, response, usuario);
     }
 
     private void eliminarToken(HttpServletRequest request, HttpServletResponse response, Usuario usuario)

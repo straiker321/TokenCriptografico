@@ -556,6 +556,13 @@ function eliminarToken(id) {
     }
 }
 
+function restaurarToken(id) {
+    if (confirm('¿Desea restaurar este token oculto?')) {
+        console.log('Restaurando token:', id);
+        window.location.href = 'tokens?action=restore&id=' + id;
+    }
+}
+
 // ========== MOSTRAR/OCULTAR UNIDAD DE ENTREGA ==========
 function mostrarUnidad(estado, tipo) {
     const row = document.getElementById('rowUnidad' + tipo);
