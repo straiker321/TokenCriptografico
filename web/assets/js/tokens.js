@@ -462,6 +462,7 @@ function mostrarFormularioConfirmacion(id, data) {
             inputFechaEntrega1.setAttribute('value', fechaNormalizadaConf1);
             inputFechaEntrega1.defaultValue = fechaNormalizadaConf1;
             inputFechaEntrega1.placeholder = '';
+            inputFechaEntrega1.value = normalizarFechaInput(data.fechaConf1);
         }
 
         const textareaObs1 = seccionInicial.querySelector('textarea[name="observaciones"]');

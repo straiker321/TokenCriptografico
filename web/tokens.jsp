@@ -642,6 +642,7 @@
                             <label>Doc Sustento de entrega</label>
                             <div id="docSustentoEntregaCarga">
                                 <input type="file" name="docSustentoEntrega" class="form-control"
+                                <input type="file" name="docSustentoEntrega" class="form-control" 
                                        accept=".pdf,.jpg,.jpeg,.png">
                                 <small class="form-hint">PDF, JPG, PNG (Máx. 5MB)</small>
                             </div>
