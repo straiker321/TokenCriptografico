@@ -722,3 +722,48 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* ============================================
+   LOADER GLOBAL DEL SISTEMA
+   ============================================ */
+.global-loader {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 24, 39, 0.42);
+    backdrop-filter: blur(2px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loader-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.24);
+}
+
+.loader-card p {
+    margin: 0;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.loader-spinner {
+    width: 22px;
+    height: 22px;
+    border: 3px solid #dbeafe;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: giroGlobal .8s linear infinite;
+}
+
+@keyframes giroGlobal {
+    to { transform: rotate(360deg); }
+}
