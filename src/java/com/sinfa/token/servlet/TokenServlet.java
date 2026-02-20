@@ -259,6 +259,7 @@ public class TokenServlet extends HttpServlet {
         try {
             int idToken = Integer.parseInt(request.getParameter("idToken"));
             String dniUsuarioAsigna = request.getParameter("dniUsuarioAsigna");
+            String dniUsuarioAsignaOriginal = request.getParameter("dniUsuarioAsignaOriginal");
             String dniUsuarioRecibe = request.getParameter("dniUsuarioRecibe");
             int unidadRegistra = Integer.parseInt(request.getParameter("unidadRegistra"));
             int accion = Integer.parseInt(request.getParameter("accion"));
@@ -267,6 +268,12 @@ public class TokenServlet extends HttpServlet {
             System.out.println("  - ID Token: " + idToken);
             System.out.println("  - DNI Asignado: " + dniUsuarioAsigna);
             System.out.println("  - Acción: " + accion);
+
+            if ((dniUsuarioAsigna == null || dniUsuarioAsigna.trim().isEmpty())
+                    && dniUsuarioAsignaOriginal != null && !dniUsuarioAsignaOriginal.trim().isEmpty()) {
+                dniUsuarioAsigna = dniUsuarioAsignaOriginal.trim();
+                System.out.println("  - DNI Asignado restaurado desde valor original: " + dniUsuarioAsigna);
+            }
 
             // Validar DNI
             if (!ValidationUtil.isValidDNI(dniUsuarioAsigna)) {
@@ -571,7 +578,9 @@ public class TokenServlet extends HttpServlet {
 
                 // Fecha de confirmación 1
                 if (token.getFecentcon() != null) {
-                    json.append(",\"fechaConf1\":\"").append(token.getFecentcon().toString()).append("\"");
+                    String fechaConf1 = token.getFecentcon().toString();
+                    json.append(",\"fechaConf1\":\"").append(fechaConf1).append("\"");
+                    json.append(",\"fechaEntregaConf1\":\"").append(fechaConf1).append("\"");
                 }
 
                 // Observaciones de confirmación 1
@@ -658,7 +667,7 @@ public class TokenServlet extends HttpServlet {
         boolean ok = tokenDAO.eliminar(idToken);
 
         if (ok) {
-            request.setAttribute("success", "✓ Token eliminado");
+            request.setAttribute("success", "✓ Token ocultado correctamente (el registro se conserva)");
             System.out.println("✓ Token " + idToken + " eliminado por: " + usuario.getUsername());
         } else {
             request.setAttribute("error", "Error al eliminar");

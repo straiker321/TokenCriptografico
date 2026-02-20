@@ -26,6 +26,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Configurar fecha máxima en campos de fecha
     configurarFechas();
+
+    const formEditarAdmin = document.getElementById('formEditarAdmin');
+    if (formEditarAdmin) {
+        formEditarAdmin.addEventListener('submit', validarFormularioEditarAdmin);
+    }
 });
 
 
@@ -284,6 +289,8 @@ function mostrarFormularioEdicionAdmin(id, data) {
     
     // DNI asignado
     document.getElementById('dniAsignaEdit').value = data.dni || '';
+    const dniOriginalEdit = document.getElementById('dniAsignaEditOriginal');
+    if (dniOriginalEdit) dniOriginalEdit.value = data.dni || '';
     document.getElementById('nombreEditAsigna').value = data.nombre || '';
     document.getElementById('estadoEditAsigna').value = data.estado || '';
     document.getElementById('dependenciaEditAsigna').value = data.dependencia || '';
@@ -309,7 +316,7 @@ function mostrarFormularioEdicionAdmin(id, data) {
 
 function eliminarTokenDesdeModal() {
     if (tokenActual) {
-        if (confirm('¿Está seguro de eliminar este token?\n\nEsta acción no se puede deshacer.')) {
+        if (confirm('¿Está seguro de ocultar este token?\n\nEl registro NO se elimina físicamente, solo quedará invisible.')) {
             cerrarModal('modalEditarAdmin');
             window.location.href = 'tokens?action=delete&id=' + tokenActual;
         }
@@ -430,7 +437,8 @@ function mostrarFormularioConfirmacion(id, data) {
 
         const inputFechaEntrega1 = seccionInicial.querySelector('input[name="fechaEntrega"]');
         if (inputFechaEntrega1) {
-            const fechaNormalizadaConf1 = normalizarFechaInput(data.fechaConf1);
+            const fechaFuenteConf1 = data.fechaConf1 || data.fechaEntregaConf1 || '';
+            const fechaNormalizadaConf1 = normalizarFechaInput(fechaFuenteConf1);
             inputFechaEntrega1.type = 'date';
             inputFechaEntrega1.value = fechaNormalizadaConf1;
             inputFechaEntrega1.setAttribute('value', fechaNormalizadaConf1);
@@ -542,7 +550,7 @@ function verDetalle(id) {
 
 // ========== ELIMINAR TOKEN ==========
 function eliminarToken(id) {
-    if (confirm('¿Está seguro de eliminar este token?\n\nEsta acción no se puede deshacer.')) {
+    if (confirm('¿Está seguro de ocultar este token?\n\nEl registro NO se elimina físicamente, solo quedará invisible.')) {
         console.log('Eliminando token:', id);
         window.location.href = 'tokens?action=delete&id=' + id;
     }
@@ -849,6 +857,28 @@ function validarBusqueda() {
     
     // Todo OK - permitir envío
     console.log('✓ Búsqueda válida:', { dni, fechaDesde, fechaHasta });
+    return true;
+}
+
+
+function validarFormularioEditarAdmin(event) {
+    const dniEdit = document.getElementById('dniAsignaEdit')?.value?.trim() || '';
+    const dniOriginal = document.getElementById('dniAsignaEditOriginal')?.value?.trim() || '';
+
+    if (!/^\d{8}$/.test(dniEdit)) {
+        alert('El DNI del usuario asignado debe tener 8 dígitos.');
+        event.preventDefault();
+        return false;
+    }
+
+    if (dniOriginal && dniEdit !== dniOriginal) {
+        const confirmar = confirm('Está cambiando el DNI asignado del token. ¿Desea continuar?');
+        if (!confirmar) {
+            event.preventDefault();
+            return false;
+        }
+    }
+
     return true;
 }
 

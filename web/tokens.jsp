@@ -285,6 +285,7 @@
             <form action="tokens" method="POST" enctype="multipart/form-data" id="formEditarAdmin">
                 <input type="hidden" name="action" value="actualizar">
                 <input type="hidden" name="idToken" id="idTokenEditar">
+                <input type="hidden" name="dniUsuarioAsignaOriginal" id="dniAsignaEditOriginal">
                 
                 <div class="form-section" style="background: #fef3c7; border-left-color: #f59e0b;">
                     <h4><i class="fas fa-database"></i> DATOS DEL REGISTRO</h4>
