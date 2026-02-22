@@ -26,9 +26,52 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Configurar fecha máxima en campos de fecha
     configurarFechas();
+
+    const formEditarAdmin = document.getElementById('formEditarAdmin');
+    if (formEditarAdmin) {
+        formEditarAdmin.addEventListener('submit', validarFormularioEditarAdmin);
+    }
+
+    window.addEventListener('pageshow', ocultarLoaderGlobal);
+    window.addEventListener('beforeunload', mostrarLoaderGlobal);
 });
 
+
+function normalizarFechaInput(valor) {
+    if (!valor) return '';
+
+    const fechaTexto = String(valor).trim();
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fechaTexto)) {
+        return fechaTexto;
+    }
+
+    const matchFecha = fechaTexto.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (matchFecha) {
+        return matchFecha[1];
+    }
+
+    const fecha = new Date(fechaTexto);
+    if (!isNaN(fecha.getTime())) {
+        return fecha.toISOString().split('T')[0];
+    }
+
+    return '';
+}
+
+
+function mostrarLoaderGlobal() {
+    const loader = document.getElementById('globalLoader');
+    if (loader) loader.style.display = 'flex';
+}
+
+function ocultarLoaderGlobal() {
+    const loader = document.getElementById('globalLoader');
+    if (loader) loader.style.display = 'none';
+}
+
 // ========== MODALES ==========
+
 function mostrarModal(idModal) {
     const modal = document.getElementById(idModal);
     if (modal) {
@@ -69,6 +112,20 @@ function cerrarModal(idModal) {
             const rowUnidad2 = document.getElementById('rowUnidad2');
             if (rowUnidad1) rowUnidad1.style.display = 'none';
             if (rowUnidad2) rowUnidad2.style.display = 'none';
+
+            // Restaurar bloque de documento de confirmación inicial
+            const docSustentoEntregaCarga = document.getElementById('docSustentoEntregaCarga');
+            const docSustentoEntregaVista = document.getElementById('docSustentoEntregaVista');
+            const docSustentoEntregaActual = document.getElementById('docSustentoEntregaActual');
+            if (docSustentoEntregaCarga) docSustentoEntregaCarga.style.display = 'block';
+            if (docSustentoEntregaVista) docSustentoEntregaVista.style.display = 'none';
+            if (docSustentoEntregaActual) docSustentoEntregaActual.value = '';
+
+            const inputFechaEntrega1 = document.querySelector('#seccionConfirmacionInicial input[name="fechaEntrega"]');
+            if (inputFechaEntrega1) {
+                inputFechaEntrega1.type = 'date';
+                inputFechaEntrega1.placeholder = '';
+            }
         }
         
         console.log('✓ Modal cerrado:', idModal);
@@ -199,6 +256,7 @@ function limpiarDatosEmpleado(tipo) {
 function editarToken(id) {
     console.log('Editando token:', id);
     tokenActual = id;
+    mostrarLoaderGlobal();
     
     // Cargar datos del token
     fetch('tokens?action=getToken&id=' + id)
@@ -223,7 +281,8 @@ function editarToken(id) {
         .catch(error => {
             console.error('Error al cargar token:', error);
             alert('Error al cargar datos del token');
-        });
+        })
+        .finally(() => ocultarLoaderGlobal());
 }
 
 function mostrarFormularioEdicionAdmin(id, data) {
@@ -247,6 +306,8 @@ function mostrarFormularioEdicionAdmin(id, data) {
     
     // DNI asignado
     document.getElementById('dniAsignaEdit').value = data.dni || '';
+    const dniOriginalEdit = document.getElementById('dniAsignaEditOriginal');
+    if (dniOriginalEdit) dniOriginalEdit.value = data.dni || '';
     document.getElementById('nombreEditAsigna').value = data.nombre || '';
     document.getElementById('estadoEditAsigna').value = data.estado || '';
     document.getElementById('dependenciaEditAsigna').value = data.dependencia || '';
@@ -257,23 +318,11 @@ function mostrarFormularioEdicionAdmin(id, data) {
     // Documento sustento actual
     document.getElementById('docSustentoActual').value = data.docSustento || 'Sin archivo';
     
-    // Fecha de acción - Convertir si viene en formato ISO
+    // Fecha de acción
     if (data.fechaAccion) {
-        try {
-            // Si ya viene en formato yyyy-MM-dd, usar directamente
-            if (data.fechaAccion.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                document.getElementById('fechaAccionEdit').value = data.fechaAccion;
-            } else {
-                // Si viene en otro formato, intentar convertir
-                const fecha = new Date(data.fechaAccion);
-                const fechaFormateada = fecha.toISOString().split('T')[0];
-                document.getElementById('fechaAccionEdit').value = fechaFormateada;
-            }
-            console.log('  - Fecha acción:', data.fechaAccion);
-        } catch (e) {
-            console.error('Error al parsear fecha:', e);
-            document.getElementById('fechaAccionEdit').value = data.fechaAccion || '';
-        }
+        const fechaFormateada = normalizarFechaInput(data.fechaAccion);
+        document.getElementById('fechaAccionEdit').value = fechaFormateada;
+        console.log('  - Fecha acción:', data.fechaAccion, '=>', fechaFormateada);
     }
     
     console.log('✓ Formulario de edición ADMIN llenado');
@@ -284,8 +333,9 @@ function mostrarFormularioEdicionAdmin(id, data) {
 
 function eliminarTokenDesdeModal() {
     if (tokenActual) {
-        if (confirm('¿Está seguro de eliminar este token?\n\nEsta acción no se puede deshacer.')) {
+        if (confirm('¿Está seguro de ocultar este token?\n\nEl registro NO se elimina físicamente, solo quedará invisible.')) {
             cerrarModal('modalEditarAdmin');
+            mostrarLoaderGlobal();
             window.location.href = 'tokens?action=delete&id=' + tokenActual;
         }
     }
@@ -303,19 +353,16 @@ function mostrarFormularioConfirmacion(id, data) {
     document.getElementById('accionTokenReg').value = data.accion || '';
     document.getElementById('docSustentoReg').value = data.docSustento || '';
     
-    // Convertir fecha si viene en formato ISO
+    // Fecha de acción (normalizada para input type="date")
     if (data.fechaAccion) {
-        try {
-            const fecha = new Date(data.fechaAccion);
-            const fechaFormateada = fecha.toISOString().split('T')[0];
-            document.getElementById('fechaAccionReg').value = fechaFormateada;
-        } catch (e) {
-            document.getElementById('fechaAccionReg').value = data.fechaAccion;
-        }
+        document.getElementById('fechaAccionReg').value = normalizarFechaInput(data.fechaAccion);
     }
     
     const seccionInicial = document.getElementById('seccionConfirmacionInicial');
     const seccionFinal = document.getElementById('seccionConfirmacionFinal');
+    const docSustentoEntregaCarga = document.getElementById('docSustentoEntregaCarga');
+    const docSustentoEntregaVista = document.getElementById('docSustentoEntregaVista');
+    const docSustentoEntregaActual = document.getElementById('docSustentoEntregaActual');
     
     // Determinar qué mostrar según el estado del token
     const tieneInicial = data.codempcon !== undefined && data.codempcon !== null && data.codempcon > 0;
@@ -338,6 +385,11 @@ function mostrarFormularioConfirmacion(id, data) {
                 el.disabled = false;
             }
         });
+
+        // Mostrar carga de archivo para confirmación inicial
+        if (docSustentoEntregaCarga) docSustentoEntregaCarga.style.display = 'block';
+        if (docSustentoEntregaVista) docSustentoEntregaVista.style.display = 'none';
+        if (docSustentoEntregaActual) docSustentoEntregaActual.value = '';
         
         // Limpiar campos
         seccionInicial.querySelectorAll('input:not([readonly]), select, textarea').forEach(el => {
@@ -358,12 +410,71 @@ function mostrarFormularioConfirmacion(id, data) {
         seccionInicial.style.display = 'block';
         seccionFinal.style.display = 'block';
         
-        // Deshabilitar todos los campos de confirmación 1
+        // Deshabilitar campos editables de confirmación 1, pero mantenerlos visibles
         seccionInicial.querySelectorAll('input, select, textarea').forEach(el => {
-            el.disabled = true;
+            if (el.name && el.name !== 'idToken') {
+                el.disabled = true;
+            }
         });
         seccionInicial.querySelectorAll('[required]').forEach(el => el.required = false);
-        
+
+        // Mostrar datos de confirmación inicial en modo estático
+        document.getElementById('dniConf1').value = data.dniConf1 || '';
+        document.getElementById('nombreConf1').value = data.nombreConf1 || '';
+        document.getElementById('estadoConf1').value = data.estadoConf1 || '';
+        document.getElementById('dependenciaConf1').value = data.dependenciaConf1 || '';
+
+        // Si el backend no envía nombre/estado/dependencia, completar por DNI
+        if (data.dniConf1 && (!data.nombreConf1 || !data.dependenciaConf1)) {
+            buscarEmpleado(data.dniConf1, 'conf1');
+        }
+
+        if (data.tieneTokenConf1) {
+            const selectTieneToken1 = seccionInicial.querySelector('select[name="tieneToken"]');
+            if (selectTieneToken1) {
+                const option = Array.from(selectTieneToken1.options).find(opt => opt.text.trim() === data.tieneTokenConf1.trim());
+                if (option) selectTieneToken1.value = option.value;
+            }
+        }
+
+        if (data.estadoTokenConf1) {
+            const selectEstadoToken1 = seccionInicial.querySelector('select[name="estadoToken"]');
+            if (selectEstadoToken1) {
+                const option = Array.from(selectEstadoToken1.options).find(opt => opt.text.trim() === data.estadoTokenConf1.trim());
+                if (option) {
+                    selectEstadoToken1.value = option.value;
+                    mostrarUnidad(selectEstadoToken1.value, '1');
+                }
+            }
+        }
+
+        const selectUnidad1 = seccionInicial.querySelector('select[name="unidadEntrega"]');
+        if (selectUnidad1 && data.unidadEntregaConf1) {
+            selectUnidad1.value = data.unidadEntregaConf1;
+        }
+
+        const inputFechaEntrega1 = seccionInicial.querySelector('input[name="fechaEntrega"]');
+        if (inputFechaEntrega1) {
+            const fechaFuenteConf1 = data.fechaConf1 || data.fechaEntregaConf1 || '';
+            const fechaNormalizadaConf1 = normalizarFechaInput(fechaFuenteConf1);
+            inputFechaEntrega1.type = 'date';
+            inputFechaEntrega1.value = fechaNormalizadaConf1;
+            inputFechaEntrega1.setAttribute('value', fechaNormalizadaConf1);
+            inputFechaEntrega1.defaultValue = fechaNormalizadaConf1;
+            inputFechaEntrega1.placeholder = '';
+        }
+
+        const textareaObs1 = seccionInicial.querySelector('textarea[name="observaciones"]');
+        if (textareaObs1) {
+            textareaObs1.value = data.obsConf1 || '';
+        }
+
+        if (docSustentoEntregaActual) {
+            docSustentoEntregaActual.value = data.docSustentoEntrega || 'Sin archivo';
+        }
+        if (docSustentoEntregaCarga) docSustentoEntregaCarga.style.display = 'none';
+        if (docSustentoEntregaVista) docSustentoEntregaVista.style.display = 'block';
+
         // Mostrar datos de la primera confirmación en resumen
         document.getElementById('datoDniConf1').textContent = data.dniConf1 || '-';
         document.getElementById('datoTieneConf1').textContent = data.tieneTokenConf1 || '-';
@@ -398,6 +509,7 @@ function mostrarFormularioConfirmacion(id, data) {
 // ========== VER DETALLE ==========
 function verDetalle(id) {
     console.log('Viendo detalle del token:', id);
+    mostrarLoaderGlobal();
     
     fetch('tokens?action=getToken&id=' + id)
         .then(response => response.json())
@@ -452,14 +564,24 @@ function verDetalle(id) {
         .catch(error => {
             console.error('Error:', error);
             alert('Error al cargar detalles del token');
-        });
+        })
+        .finally(() => ocultarLoaderGlobal());
 }
 
 // ========== ELIMINAR TOKEN ==========
 function eliminarToken(id) {
-    if (confirm('¿Está seguro de eliminar este token?\n\nEsta acción no se puede deshacer.')) {
+    if (confirm('¿Está seguro de ocultar este token?\n\nEl registro NO se elimina físicamente, solo quedará invisible.')) {
         console.log('Eliminando token:', id);
+        mostrarLoaderGlobal();
         window.location.href = 'tokens?action=delete&id=' + id;
+    }
+}
+
+function restaurarToken(id) {
+    if (confirm('¿Desea restaurar este token oculto?')) {
+        console.log('Restaurando token:', id);
+        mostrarLoaderGlobal();
+        window.location.href = 'tokens?action=restore&id=' + id;
     }
 }
 
@@ -655,7 +777,8 @@ function configurarValidaciones() {
             const file = this.files[0];
             if (file) {
                 const maxSize = 5 * 1024 * 1024; // 5MB
-                const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+                const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+                const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx'];
                 
                 if (file.size > maxSize) {
                     alert('El archivo no debe superar los 5MB');
@@ -663,8 +786,17 @@ function configurarValidaciones() {
                     return;
                 }
                 
-                if (!allowedTypes.includes(file.type)) {
-                    alert('Solo se permiten archivos PDF, JPG o PNG');
+                const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+                const extensionValida = allowedExtensions.includes(extension);
+
+                // En algunos navegadores, DOC/XLS pueden llegar como application/octet-stream
+                // o con MIME vacío. Priorizamos la extensión para no bloquear archivos válidos.
+                const mimeValido = !file.type
+                    || file.type === 'application/octet-stream'
+                    || allowedTypes.includes(file.type);
+
+                if (!extensionValida || !mimeValido) {
+                    alert('Solo se permiten archivos PDF, JPG, PNG, DOC, DOCX, XLS o XLSX');
                     this.value = '';
                     return;
                 }
@@ -698,12 +830,16 @@ function prevenirEnvioMultiple() {
             
             if (submitBtn) {
                 submitBtn.disabled = true;
+                submitBtn.classList.add('loading');
                 const originalHTML = submitBtn.innerHTML;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+                mostrarLoaderGlobal();
                 
                 setTimeout(() => {
                     submitBtn.disabled = false;
+                    submitBtn.classList.remove('loading');
                     submitBtn.innerHTML = originalHTML;
+                    ocultarLoaderGlobal();
                 }, 5000);
             }
         });
@@ -764,6 +900,28 @@ function validarBusqueda() {
     
     // Todo OK - permitir envío
     console.log('✓ Búsqueda válida:', { dni, fechaDesde, fechaHasta });
+    return true;
+}
+
+
+function validarFormularioEditarAdmin(event) {
+    const dniEdit = document.getElementById('dniAsignaEdit')?.value?.trim() || '';
+    const dniOriginal = document.getElementById('dniAsignaEditOriginal')?.value?.trim() || '';
+
+    if (!/^\d{8}$/.test(dniEdit)) {
+        alert('El DNI del usuario asignado debe tener 8 dígitos.');
+        event.preventDefault();
+        return false;
+    }
+
+    if (dniOriginal && dniEdit !== dniOriginal) {
+        const confirmar = confirm('Está cambiando el DNI asignado del token. ¿Desea continuar?');
+        if (!confirmar) {
+            event.preventDefault();
+            return false;
+        }
+    }
+
     return true;
 }
 

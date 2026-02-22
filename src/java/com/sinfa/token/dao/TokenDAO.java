@@ -12,8 +12,12 @@ public class TokenDAO {
      * Listar TODOS los tokens (ADMIN)
      */
     public List<Token> listarTodosAdmin() {
+        return listarTodosAdmin(false);
+    }
+
+    public List<Token> listarTodosAdmin(boolean incluirOcultos) {
         List<Token> tokens = new ArrayList<>();
-        String sql = "SELECT at.idasignatoken, at.fecaccion, e.cemp_nu_dni, at.codemptok, "
+        String sql = "SELECT at.idasignatoken, at.fecaccion, e.cemp_nu_dni, at.codemptok, at.estado, "
                 + "e.cemp_apepat || ' ' || e.cemp_apemat || ' ' || e.cemp_denom as nombre_completo, "
                 + "e.cemp_indbaj, at.uniemptok, d.de_dependencia, "
                 + "at.flgtokcon, at.esttokcon, d2.de_dependencia as dep_entrega, "
@@ -23,9 +27,10 @@ public class TokenDAO {
                 + "INNER JOIN rhtm_per_empleados e ON at.codemptok = e.cemp_co_emp "
                 + "INNER JOIN rhtm_dependencia d ON at.uniemptok = d.co_dependencia "
                 + "LEFT JOIN rhtm_dependencia d2 ON at.unienttokcon = d2.co_dependencia "
-                + "WHERE at.estado = 1 "
+                + (incluirOcultos ? "WHERE at.estado IN (0,1) " : "WHERE at.estado = 1 ")
                 + "ORDER BY "
-                + "CASE WHEN at.codempcon IS NULL THEN 0 "
+                + "CASE WHEN at.estado = 0 THEN 3 "
+                + "     WHEN at.codempcon IS NULL THEN 0 "
                 + "     WHEN at.codempcon2 IS NULL THEN 1 "
                 + "     ELSE 2 END, "
                 + "at.fecaccion DESC, at.idasignatoken DESC";
@@ -430,6 +435,28 @@ public class TokenDAO {
         return false;
     }
 
+
+    public boolean restaurar(int id) {
+        String sql = "UPDATE t_m_asigna_token SET estado = 1, fecmod = CURRENT_TIMESTAMP WHERE idasignatoken = ?";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            int filasAfectadas = ps.executeUpdate();
+
+            if (filasAfectadas > 0) {
+                System.out.println("✓ Token restaurado: " + id);
+                return true;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("✗ Error al restaurar token: " + e.getMessage());
+        }
+
+        return false;
+    }
+
     public List<Token> buscar(String dni, String fechaDesde, String fechaHasta, boolean isAdmin, int codigoEmpleado) {
         List<Token> tokens = new ArrayList<>();
         StringBuilder sql = new StringBuilder();
@@ -538,6 +565,11 @@ public class TokenDAO {
         token.setNombreUsuarioAsignado(rs.getString("nombre_completo"));
         token.setNombreDependencia(rs.getString("de_dependencia"));
         token.setTipaccion(rs.getInt("tipaccion"));
+        try {
+            token.setEstado(rs.getInt("estado"));
+        } catch (SQLException e) {
+            token.setEstado(1);
+        }
 
         // Documentos
         token.setDocSustento(rs.getString("doc_sustento"));
@@ -584,6 +616,11 @@ public class TokenDAO {
         token.setCodemptok(rs.getInt("codemptok"));
         token.setUniemptok(rs.getInt("uniemptok"));
         token.setTipaccion(rs.getInt("tipaccion"));
+        try {
+            token.setEstado(rs.getInt("estado"));
+        } catch (SQLException e) {
+            token.setEstado(1);
+        }
         token.setEsttoken(rs.getInt("esttoken"));
         token.setFecaccion(rs.getDate("fecaccion"));
         token.setNombreUsuarioAsignado(rs.getString("nombre_completo"));

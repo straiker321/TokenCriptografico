@@ -9,20 +9,21 @@
         response.sendRedirect("login.jsp");
         return;
     }
-    
+
     boolean isAdmin = usuario.isAdmin();
-    
+
     @SuppressWarnings("unchecked")
     List<Token> tokens = (List<Token>) request.getAttribute("tokens");
     @SuppressWarnings("unchecked")
     List<Dependencia> dependencias = (List<Dependencia>) request.getAttribute("dependencias");
-    
+
     String error = (String) request.getAttribute("error");
     String success = (String) request.getAttribute("success");
     String warning = (String) request.getAttribute("warning");
-    
+    Object ultimoTokenOcultadoId = request.getAttribute("ultimoTokenOcultadoId");
+
     SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-    
+
     DependenciaDAO depDAO = new DependenciaDAO();
     int unidadUsuario = depDAO.obtenerCodigoDependenciaUsuario(usuario.getCempCoEmp());
 %>
@@ -37,6 +38,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <div id="globalLoader" class="global-loader" style="display:none;">
+        <div class="loader-card">
+            <div class="loader-brand">FAP</div>
+            <div class="loader-spinner"></div>
+            <div class="loader-text">
+                <strong>Sincronizando datos</strong>
+                <p>Procesando información del sistema FAP...</p>
+            </div>
+        </div>
+    </div>
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -48,7 +59,7 @@
                 <i class="fas fa-bars"></i>
             </button>
         </div>
-        
+
         <nav class="sidebar-nav">
             <ul>
                 <li class="nav-item">
@@ -76,13 +87,13 @@
                 <button class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
                 <h1>Gestión de Tokens Criptográficos</h1>
             </div>
-            
+
             <div class="header-right">
                 <div class="header-item">
                     <i class="fas fa-building"></i>
                     <span><%= usuario.getDependencia() %></span>
                 </div>
-                
+
                 <div class="user-menu">
                     <button class="user-menu-btn" onclick="toggleUserMenu()">
                         <div class="user-avatar-small"><i class="fas fa-user"></i></div>
@@ -94,7 +105,7 @@
                         </div>
                         <i class="fas fa-chevron-down"></i>
                     </button>
-                    
+
                     <div class="user-dropdown" id="userDropdown">
                         <a href="logout" class="dropdown-item logout-item">
                             <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
@@ -106,7 +117,7 @@
 
         <!-- CONTENIDO -->
         <div class="tokens-container">
-            
+
             <!-- MENSAJES -->
             <% if (error != null) { %>
             <div class="alert alert-error">
@@ -114,43 +125,53 @@
                 <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
             </div>
             <% } %>
-            
+
             <% if (success != null) { %>
             <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i> <%= success %>
                 <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
             </div>
             <% } %>
-            
+
+
+            <% if (isAdmin && ultimoTokenOcultadoId != null) { %>
+            <div class="alert alert-warning" style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                <div><i class="fas fa-history"></i> Último token ocultado: #<%= ultimoTokenOcultadoId %></div>
+                <a class="btn btn-secondary" href="tokens?action=restore&id=<%= ultimoTokenOcultadoId %>">
+                    <i class="fas fa-undo"></i> Deshacer ocultado
+                </a>
+            </div>
+            <% } %>
+
             <% if (warning != null) { %>
             <div class="alert alert-warning">
                 <i class="fas fa-exclamation-triangle"></i> <%= warning %>
                 <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
             </div>
             <% } %>
-            
+
             <!-- BARRA DE BÚSQUEDA -->
             <div class="search-bar">
                <form action="tokens" method="GET" class="search-form" onsubmit="return validarBusqueda()">
                    <input type="hidden" name="action" value="buscar">
                    <div class="search-inputs">
-                       <input type="text" 
+                       <input type="text"
                               id="dniBusqueda"
-                              name="dni" 
-                              placeholder="Buscar por DNI (8 dígitos)" 
+                              name="dni"
+                              placeholder="Buscar por DNI (8 dígitos)"
                               class="form-control"
                               pattern="[0-9]{8}"
                               maxlength="8">
 
-                       <input type="date" 
-                              name="fechaDesde" 
+                       <input type="date"
+                              name="fechaDesde"
                               id="fechaDesde"
                               class="form-control"
                               value="${fecIni}"
                               placeholder="Fecha desde">
 
-                       <input type="date" 
-                              name="fechaHasta" 
+                       <input type="date"
+                              name="fechaHasta"
                               id="fechaHasta"
                               class="form-control"
                               value="${fecFin}"
@@ -169,14 +190,20 @@
                        </button>
                    </div>
                </form>
- 
-                <% if (isAdmin) { %>
+
+                <% if (isAdmin) {
+                    boolean mostrarOcultos = "1".equals(request.getParameter("mostrarOcultos"));
+                %>
+                <a class="btn btn-secondary" href="tokens?action=list<%= mostrarOcultos ? "" : "&mostrarOcultos=1" %>">
+                    <i class="fas fa-eye<%= mostrarOcultos ? "-slash" : "" %>"></i>
+                    <%= mostrarOcultos ? "Ocultar inactivos" : "Ver inactivos" %>
+                </a>
                 <button class="btn btn-primary" onclick="mostrarModal('modalAsignar')">
                     <i class="fas fa-plus"></i> Asignar Token
                 </button>
                 <% } %>
             </div>
-            
+
             <!-- TABLA DE TOKENS -->
             <div class="tokens-table-container">
                 <table class="tokens-table">
@@ -195,15 +222,15 @@
                     <tbody>
                         <% if (tokens != null && !tokens.isEmpty()) {
                             int i = 1;
-                            for (Token token : tokens) { 
+                            for (Token token : tokens) {
                                 // PERMISOS SEGÚN DOCUMENTO DE ANÁLISIS:
                                 // 1.a.i: ADMIN ve ícono editar SIEMPRE
                                 // 1.a.ii: NO ADMIN ve ícono editar si CODEMPCON = NULL o CODEMPCON2 = NULL
-                                
+
                                 boolean mostrarEditar = false;
-                                
+
                                 if (isAdmin) {
-                                    
+
                                     mostrarEditar = true;
                                 } else {
                                     // NO ADMIN solo ve ícono si hay confirmaciones pendientes
@@ -211,9 +238,14 @@
                                         mostrarEditar = true;
                                     }
                                 }
-                                
-                                // Solo ADMIN puede eliminar
-                                boolean mostrarEliminar = isAdmin;
+
+                                // Solo ADMIN puede eliminar/restaurar
+                                boolean tokenOculto = token.getEstado() == 0;
+                                boolean mostrarEliminar = isAdmin && !tokenOculto;
+                                boolean mostrarRestaurar = isAdmin && tokenOculto;
+                                if (tokenOculto) {
+                                    mostrarEditar = false;
+                                }
                         %>
                         <tr>
                             <td><%= i++ %></td>
@@ -222,7 +254,9 @@
                             <td><%= token.getNombreUsuarioAsignado() %></td>
                             <td><%= token.getNombreDependencia()%></td>
                             <td>
-                                <% if (token.isCompleto()) { %>
+                                <% if (token.getEstado() == 0) { %>
+                                <span class="badge" style="background:#6b7280;color:#fff;">INACTIVO / OCULTO</span>
+                                <% } else if (token.isCompleto()) { %>
                                 <span class="badge badge-success">✓ COMPLETO</span>
                                 <% } else if (token.isPendienteConfirmacionFinal()) { %>
                                 <span class="badge badge-info">⏳ PEND. CONF. FINAL</span>
@@ -234,27 +268,35 @@
                             <td>
                                 <div class="action-buttons">
                                     <!-- VER DETALLES: TODOS -->
-                                    <button class="btn-icon btn-view" 
+                                    <button class="btn-icon btn-view"
                                             onclick="verDetalle(<%= token.getIdasignatoken() %>)"
                                             title="Ver Detalles">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    
+
                                     <!-- EDITAR/CONFIRMAR: ADMIN siempre, NO ADMIN si hay pendientes -->
                                     <% if (mostrarEditar) { %>
-                                    <button class="btn-icon btn-edit" 
+                                    <button class="btn-icon btn-edit"
                                             onclick="editarToken(<%= token.getIdasignatoken() %>)"
                                             title="<%= isAdmin ? "Editar" : "Confirmar" %>">
                                         <i class="fas fa-<%= isAdmin ? "edit" : "check" %>"></i>
                                     </button>
                                     <% } %>
-                                    
+
                                     <!-- ELIMINAR: Solo ADMIN -->
                                     <% if (mostrarEliminar) { %>
-                                    <button class="btn-icon btn-delete" 
+                                    <button class="btn-icon btn-delete"
                                             onclick="eliminarToken(<%= token.getIdasignatoken() %>)"
-                                            title="Eliminar">
+                                            title="Ocultar">
                                         <i class="fas fa-trash"></i>
+                                    </button>
+                                    <% } %>
+
+                                    <% if (mostrarRestaurar) { %>
+                                    <button class="btn-icon" style="background:#059669;color:#fff;"
+                                            onclick="restaurarToken(<%= token.getIdasignatoken() %>)"
+                                            title="Restaurar token">
+                                        <i class="fas fa-undo"></i>
                                     </button>
                                     <% } %>
                                 </div>
@@ -273,7 +315,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- MODAL: EDITAR TOKEN (ADMIN) -->
     <div class="modal" id="modalEditarAdmin">
         <div class="modal-content modal-large">
@@ -281,14 +323,15 @@
                 <h3><i class="fas fa-edit"></i> EDITAR TOKEN - ADMINISTRADOR</h3>
                 <button class="modal-close" onclick="cerrarModal('modalEditarAdmin')">&times;</button>
             </div>
-            
+
             <form action="tokens" method="POST" enctype="multipart/form-data" id="formEditarAdmin">
                 <input type="hidden" name="action" value="actualizar">
                 <input type="hidden" name="idToken" id="idTokenEditar">
-                
+                <input type="hidden" name="dniUsuarioAsignaOriginal" id="dniAsignaEditOriginal">
+
                 <div class="form-section" style="background: #fef3c7; border-left-color: #f59e0b;">
                     <h4><i class="fas fa-database"></i> DATOS DEL REGISTRO</h4>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>Registrado Por <span style="color: red;">(*)</span></label>
@@ -298,7 +341,7 @@
                                 <% } %>
                             </select>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>Acción <span style="color: red;">(*)</span></label>
                             <select name="accion" id="accionEdit" class="form-control" required>
@@ -307,11 +350,11 @@
                             </select>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>DNI Usuario Asignado <span style="color: red;">(*)</span></label>
-                            <input type="text" name="dniUsuarioAsigna" id="dniAsignaEdit" class="form-control" 
+                            <input type="text" name="dniUsuarioAsigna" id="dniAsignaEdit" class="form-control"
                                    pattern="[0-9]{8}" maxlength="8"
                                    onblur="buscarEmpleado(this.value, 'editAsigna')" required>
                         </div>
@@ -320,7 +363,7 @@
                             <input type="text" id="nombreEditAsigna" class="form-control" readonly>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>Estado Usuario</label>
@@ -331,11 +374,11 @@
                             <input type="text" id="dependenciaEditAsigna" class="form-control" readonly>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>DNI Usuario que Recibe</label>
-                            <input type="text" name="dniUsuarioRecibe" id="dniRecibeEdit" class="form-control" 
+                            <input type="text" name="dniUsuarioRecibe" id="dniRecibeEdit" class="form-control"
                                    pattern="[0-9]{8}" maxlength="8">
                         </div>
                         <div class="form-group">
@@ -343,7 +386,7 @@
                             <input type="date" name="fechaAccion" id="fechaAccionEdit" class="form-control" required>
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Documento Sustento Actual</label>
                         <div style="display: flex; gap: 10px; align-items: center;">
@@ -353,14 +396,14 @@
                             </button>
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Nuevo Documento Sustento (Dejar vacío si no desea cambiar)</label>
-                        <input type="file" name="docSustento" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                        <small class="form-hint">PDF, JPG, PNG (Máx. 5MB)</small>
+                        <input type="file" name="docSustento" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
+                        <small class="form-hint">PDF, JPG, PNG, DOC, DOCX, XLS, XLSX (Máx. 5MB)</small>
                     </div>
                 </div>
-                
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" onclick="eliminarTokenDesdeModal()">
                         <i class="fas fa-trash"></i> ELIMINAR
@@ -375,7 +418,7 @@
             </form>
         </div>
     </div>
-    
+
     <!-- MODAL: ASIGNAR TOKEN -->
     <div class="modal" id="modalAsignar">
         <div class="modal-content">
@@ -383,16 +426,16 @@
                 <h3><i class="fas fa-plus-circle"></i> Asignar Nuevo Token</h3>
                 <button class="modal-close" onclick="cerrarModal('modalAsignar')">&times;</button>
             </div>
-            
+
             <form action="tokens" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="crear">
-                
+
                 <div class="form-row">
                     <div class="form-group">
                         <label>Registrado Por <span style="color: red;">(*)</span></label>
                         <select name="unidadRegistra" class="form-control" <%= !isAdmin ? "disabled" : "" %> required>
                             <% if (dependencias != null) for (Dependencia dep : dependencias) { %>
-                            <option value="<%= dep.getCoDependencia() %>" 
+                            <option value="<%= dep.getCoDependencia() %>"
                                     <%= dep.getCoDependencia() == unidadUsuario ? "selected" : "" %>>
                                 <%= dep.getDeDependencia() %>
                             </option>
@@ -402,7 +445,7 @@
                         <input type="hidden" name="unidadRegistra" value="<%= unidadUsuario %>">
                         <% } %>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Acción <span style="color: red;">(*)</span></label>
                         <select name="accion" class="form-control" <%= !isAdmin ? "disabled" : "" %> required>
@@ -414,52 +457,52 @@
                         <% } %>
                     </div>
                 </div>
-                
+
                 <div class="form-row">
                     <div class="form-group">
                         <label>DNI Usuario a Asignar <span style="color: red;">(*)</span></label>
-                        <input type="text" name="dniUsuarioAsigna" class="form-control" 
+                        <input type="text" name="dniUsuarioAsigna" class="form-control"
                                pattern="[0-9]{8}" maxlength="8" placeholder="12345678"
                                onblur="buscarEmpleado(this.value, 'asigna')" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Nombre</label>
                         <input type="text" id="nombreAsigna" class="form-control" readonly>
                     </div>
                 </div>
-                
+
                 <div class="form-row">
                     <div class="form-group">
                         <label>Estado</label>
                         <input type="text" id="estadoAsigna" class="form-control" readonly>
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Dependencia</label>
                         <input type="text" id="dependenciaAsigna" class="form-control" readonly>
                     </div>
                 </div>
-                
+
                 <div class="form-row">
                     <div class="form-group">
                         <label>DNI Usuario que Recibe</label>
-                        <input type="text" name="dniUsuarioRecibe" class="form-control" 
+                        <input type="text" name="dniUsuarioRecibe" class="form-control"
                                pattern="[0-9]{8}" maxlength="8">
                     </div>
-                    
+
                     <div class="form-group">
                         <label>Fecha de Acción <span style="color: red;">(*)</span></label>
                         <input type="date" name="fechaAccion" class="form-control" required>
                     </div>
                 </div>
-                
+
                 <div class="form-group">
                     <label>Documento Sustento (PDF, JPG, PNG)</label>
-                    <input type="file" name="docSustento" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                    <input type="file" name="docSustento" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
                     <small class="form-hint">Máximo 5MB</small>
                 </div>
-                
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalAsignar')">
                         <i class="fas fa-times"></i> Cancelar
@@ -471,7 +514,7 @@
             </form>
         </div>
     </div>
-    
+
     <!-- MODAL: CONFIRMAR TOKEN -->
     <div class="modal" id="modalConfirmarToken">
         <div class="modal-content modal-large">
@@ -479,15 +522,15 @@
                 <h3><i class="fas fa-check-circle"></i> CONFIRMAR ASIGNACIÓN DE TOKEN</h3>
                 <button class="modal-close" onclick="cerrarModal('modalConfirmarToken')">&times;</button>
             </div>
-            
+
             <form action="tokens" method="POST" enctype="multipart/form-data" id="formConfirmarToken">
                 <input type="hidden" name="action" id="actionConfirmar">
                 <input type="hidden" name="idToken" id="idTokenConfirmar">
-                
+
                 <!-- SECCIÓN 1: DATOS DEL TOKEN ENTREGADO -->
                 <div class="form-section" style="background: #e8f4f8; border-left-color: #2196f3;">
                     <h4><i class="fas fa-info-circle"></i> DATOS DE TOKEN ENTREGADO</h4>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>DNI del Usuario</label>
@@ -498,7 +541,7 @@
                             <input type="text" class="form-control" id="nombreTokenReg" readonly>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>Estado Usuario</label>
@@ -509,7 +552,7 @@
                             <input type="text" class="form-control" id="dependenciaTokenReg" readonly>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>Acción</label>
@@ -520,7 +563,7 @@
                             <input type="date" class="form-control" id="fechaAccionReg" readonly>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>Doc Sustento</label>
@@ -534,15 +577,15 @@
                         <div class="form-group"></div>
                     </div>
                 </div>
-                
+
                 <!-- SECCIÓN 2: CONFIRMAR ASIGNACIÓN DEL TOKEN -->
                 <div class="form-section" id="seccionConfirmacionInicial" style="background: #fff8e1; border-left-color: #ff9800;">
                     <h4><i class="fas fa-check"></i> CONFIRMAR ASIGNACIÓN INICIAL DEL TOKEN</h4>
-                    
+
                     <div class="form-row">
-                        <div class="form-group">       
+                        <div class="form-group">
                             <label>DNI del Usuario al que se asignó <span style="color: red;">(*)</span></label>
-                            <input type="text" name="dniConfirma" class="form-control" 
+                            <input type="text" name="dniConfirma" class="form-control"
                                    pattern="[0-9]{8}" maxlength="8" id="dniConf1"
                                    onblur="buscarEmpleado(this.value, 'conf1')" required>
                         </div>
@@ -551,7 +594,7 @@
                             <input type="text" class="form-control" id="nombreConf1" readonly>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>Estado Usuario</label>
@@ -562,7 +605,7 @@
                             <input type="text" class="form-control" id="dependenciaConf1" readonly>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>¿Tiene TOKEN? <span style="color: red;">(*)</span></label>
@@ -574,7 +617,7 @@
                         </div>
                         <div class="form-group">
                             <label>Estado del TOKEN <span style="color: red;">(*)</span></label>
-                            <select name="estadoToken" class="form-control" 
+                            <select name="estadoToken" class="form-control"
                                     onchange="mostrarUnidad(this.value, '1')" required>
                                 <option value="">-- Seleccione --</option>
                                 <option value="1">OPERATIVO</option>
@@ -584,7 +627,7 @@
                             </select>
                         </div>
                     </div>
-                    
+
                     <div class="form-row" id="rowUnidad1" style="display: none;">
                         <div class="form-group">
                             <label>Unidad a la que se entregó <span style="color: red;">(*)</span></label>
@@ -597,20 +640,30 @@
                         </div>
                         <div class="form-group"></div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>Doc Sustento de entrega</label>
-                            <input type="file" name="docSustentoEntrega" class="form-control" 
-                                   accept=".pdf,.jpg,.jpeg,.png">
-                            <small class="form-hint">PDF, JPG, PNG (Máx. 5MB)</small>
+                            <div id="docSustentoEntregaCarga">
+                                <input type="file" name="docSustentoEntrega" class="form-control"
+                                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
+                                <small class="form-hint">PDF, JPG, PNG, DOC, DOCX, XLS, XLSX (Máx. 5MB)</small>
+                            </div>
+                            <div id="docSustentoEntregaVista" style="display: none;">
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <input type="text" class="form-control" id="docSustentoEntregaActual" readonly style="flex: 1;">
+                                    <button type="button" class="btn btn-secondary" onclick="verArchivoModal('docSustentoEntregaActual')" style="padding: 8px 16px;">
+                                        <i class="fas fa-file-pdf"></i> Ver
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Fecha de entrega <span style="color: red;">(*)</span></label>
                             <input type="date" name="fechaEntrega" class="form-control" required>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group" style="grid-column: 1 / -1;">
                             <label>Observaciones</label>
@@ -618,11 +671,11 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- SECCIÓN 3: CONFIRMAR ASIGNACIÓN FINAL -->
                 <div class="form-section" id="seccionConfirmacionFinal" style="display: none; background: #e8f5e9; border-left-color: #4caf50;">
                     <h4><i class="fas fa-check-double"></i> CONFIRMAR ASIGNACIÓN FINAL</h4>
-                    
+
                     <div style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
                         <p style="margin: 0; font-weight: 600; color: #666; margin-bottom: 10px;">
                             <i class="fas fa-info-circle"></i> Primera Confirmación:
@@ -633,11 +686,11 @@
                             <div><strong>Estado:</strong> <span id="datoEstadoConf1">-</span></div>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>DNI del Usuario al que se asignó <span style="color: red;">(*)</span></label>
-                            <input type="text" name="dniConfirma2" class="form-control" 
+                            <input type="text" name="dniConfirma2" class="form-control"
                                    pattern="[0-9]{8}" maxlength="8" id="dniConf2"
                                    onblur="buscarEmpleado(this.value, 'conf2')">
                         </div>
@@ -646,7 +699,7 @@
                             <input type="text" class="form-control" id="nombreConf2" readonly>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>Estado Usuario</label>
@@ -657,7 +710,7 @@
                             <input type="text" class="form-control" id="dependenciaConf2" readonly>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>¿Tiene TOKEN? <span style="color: red;">(*)</span></label>
@@ -669,7 +722,7 @@
                         </div>
                         <div class="form-group">
                             <label>Estado del TOKEN <span style="color: red;">(*)</span></label>
-                            <select name="estadoToken2" class="form-control" 
+                            <select name="estadoToken2" class="form-control"
                                     onchange="mostrarUnidad(this.value, '2')">
                                 <option value="">-- Seleccione --</option>
                                 <option value="1">OPERATIVO</option>
@@ -679,7 +732,7 @@
                             </select>
                         </div>
                     </div>
-                    
+
                     <div class="form-row" id="rowUnidad2" style="display: none;">
                         <div class="form-group">
                             <label>Unidad a la que se entregó <span style="color: red;">(*)</span></label>
@@ -692,20 +745,20 @@
                         </div>
                         <div class="form-group"></div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>Doc Sustento final</label>
-                            <input type="file" name="docSustentoFinal" class="form-control" 
-                                   accept=".pdf,.jpg,.jpeg,.png">
-                            <small class="form-hint">PDF, JPG, PNG (Máx. 5MB)</small>
+                            <input type="file" name="docSustentoFinal" class="form-control"
+                                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
+                            <small class="form-hint">PDF, JPG, PNG, DOC, DOCX, XLS, XLSX (Máx. 5MB)</small>
                         </div>
                         <div class="form-group">
                             <label>Fecha de entrega <span style="color: red;">(*)</span></label>
                             <input type="date" name="fechaEntrega2" class="form-control">
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
                         <div class="form-group" style="grid-column: 1 / -1;">
                             <label>Observaciones</label>
@@ -713,7 +766,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalConfirmarToken')">
                         <i class="fas fa-times"></i> REGRESAR
@@ -725,7 +778,7 @@
             </form>
         </div>
     </div>
-    
+
     <!-- MODAL: VER DETALLE -->
     <div class="modal" id="modalDetalle">
         <div class="modal-content modal-large">
@@ -733,11 +786,11 @@
                 <h3><i class="fas fa-info-circle"></i> Detalle del Token</h3>
                 <button class="modal-close" onclick="cerrarModal('modalDetalle')">&times;</button>
             </div>
-            
+
             <div id="detalleContent" style="padding: 20px;">
                 <!-- Se carga dinámicamente -->
             </div>
-            
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalDetalle')">
                     <i class="fas fa-times"></i> Cerrar
@@ -745,7 +798,7 @@
             </div>
         </div>
     </div>
-    
+
     <script src="${pageContext.request.contextPath}/assets/js/dashboard.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/tokens.js"></script>
     <script>

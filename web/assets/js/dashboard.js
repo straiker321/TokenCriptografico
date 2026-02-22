@@ -16,10 +16,43 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeUserMenu();
     loadStatistics();
     loadRecentActivity();
+    bindGlobalLoaderEvents();
     
     // Marcar item activo en el menú
     markActiveMenuItem();
 });
+
+
+function showSystemLoader() {
+    const loader = document.getElementById('globalLoader');
+    if (loader) loader.style.display = 'flex';
+}
+
+function hideSystemLoader() {
+    const loader = document.getElementById('globalLoader');
+    if (loader) loader.style.display = 'none';
+}
+
+function bindGlobalLoaderEvents() {
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function() {
+            showSystemLoader();
+        });
+    });
+
+    document.querySelectorAll('a[href]').forEach(link => {
+        link.addEventListener('click', function() {
+            const href = this.getAttribute('href') || '';
+            if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.includes('action=download')) {
+                return;
+            }
+            showSystemLoader();
+        });
+    });
+
+    window.addEventListener('pageshow', hideSystemLoader);
+    window.addEventListener('load', hideSystemLoader);
+}
 
 /**
  * Inicializar sidebar
@@ -327,5 +360,7 @@ window.confirmarCerrarSesion = confirmarCerrarSesion;
 window.showNotification = showNotification;
 window.formatDate = formatDate;
 window.formatTime = formatTime;
+window.showSystemLoader = showSystemLoader;
+window.hideSystemLoader = hideSystemLoader;
 
 console.log('✓ JavaScript del dashboard inicializado correctamente');
