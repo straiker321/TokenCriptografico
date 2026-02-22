@@ -462,7 +462,6 @@ function mostrarFormularioConfirmacion(id, data) {
             inputFechaEntrega1.setAttribute('value', fechaNormalizadaConf1);
             inputFechaEntrega1.defaultValue = fechaNormalizadaConf1;
             inputFechaEntrega1.placeholder = '';
-            inputFechaEntrega1.value = normalizarFechaInput(data.fechaConf1);
         }
 
         const textareaObs1 = seccionInicial.querySelector('textarea[name="observaciones"]');
@@ -778,7 +777,8 @@ function configurarValidaciones() {
             const file = this.files[0];
             if (file) {
                 const maxSize = 5 * 1024 * 1024; // 5MB
-                const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+                const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+                const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx', '.xls', '.xlsx'];
                 
                 if (file.size > maxSize) {
                     alert('El archivo no debe superar los 5MB');
@@ -786,8 +786,17 @@ function configurarValidaciones() {
                     return;
                 }
                 
-                if (!allowedTypes.includes(file.type)) {
-                    alert('Solo se permiten archivos PDF, JPG o PNG');
+                const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+                const extensionValida = allowedExtensions.includes(extension);
+
+                // En algunos navegadores, DOC/XLS pueden llegar como application/octet-stream
+                // o con MIME vacío. Priorizamos la extensión para no bloquear archivos válidos.
+                const mimeValido = !file.type
+                    || file.type === 'application/octet-stream'
+                    || allowedTypes.includes(file.type);
+
+                if (!extensionValida || !mimeValido) {
+                    alert('Solo se permiten archivos PDF, JPG, PNG, DOC, DOCX, XLS o XLSX');
                     this.value = '';
                     return;
                 }

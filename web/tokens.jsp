@@ -40,8 +40,12 @@
 <body>
     <div id="globalLoader" class="global-loader" style="display:none;">
         <div class="loader-card">
+            <div class="loader-brand">FAP</div>
             <div class="loader-spinner"></div>
-            <p>Procesando información, por favor espere...</p>
+            <div class="loader-text">
+                <strong>Sincronizando datos</strong>
+                <p>Procesando información del sistema FAP...</p>
+            </div>
         </div>
     </div>
     <!-- SIDEBAR -->
@@ -395,8 +399,8 @@
 
                     <div class="form-group">
                         <label>Nuevo Documento Sustento (Dejar vacío si no desea cambiar)</label>
-                        <input type="file" name="docSustento" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                        <small class="form-hint">PDF, JPG, PNG (Máx. 5MB)</small>
+                        <input type="file" name="docSustento" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
+                        <small class="form-hint">PDF, JPG, PNG, DOC, DOCX, XLS, XLSX (Máx. 5MB)</small>
                     </div>
                 </div>
 
@@ -495,7 +499,7 @@
 
                 <div class="form-group">
                     <label>Documento Sustento (PDF, JPG, PNG)</label>
-                    <input type="file" name="docSustento" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                    <input type="file" name="docSustento" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
                     <small class="form-hint">Máximo 5MB</small>
                 </div>
 
@@ -642,9 +646,8 @@
                             <label>Doc Sustento de entrega</label>
                             <div id="docSustentoEntregaCarga">
                                 <input type="file" name="docSustentoEntrega" class="form-control"
-                                <input type="file" name="docSustentoEntrega" class="form-control" 
-                                       accept=".pdf,.jpg,.jpeg,.png">
-                                <small class="form-hint">PDF, JPG, PNG (Máx. 5MB)</small>
+                                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
+                                <small class="form-hint">PDF, JPG, PNG, DOC, DOCX, XLS, XLSX (Máx. 5MB)</small>
                             </div>
                             <div id="docSustentoEntregaVista" style="display: none;">
                                 <div style="display: flex; gap: 10px; align-items: center;">
@@ -747,8 +750,8 @@
                         <div class="form-group">
                             <label>Doc Sustento final</label>
                             <input type="file" name="docSustentoFinal" class="form-control"
-                                   accept=".pdf,.jpg,.jpeg,.png">
-                            <small class="form-hint">PDF, JPG, PNG (Máx. 5MB)</small>
+                                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
+                            <small class="form-hint">PDF, JPG, PNG, DOC, DOCX, XLS, XLSX (Máx. 5MB)</small>
                         </div>
                         <div class="form-group">
                             <label>Fecha de entrega <span style="color: red;">(*)</span></label>
