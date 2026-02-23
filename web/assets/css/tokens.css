@@ -258,8 +258,8 @@
 }
 
 .btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.14);
 }
 
 .btn:active:not(:disabled) {
@@ -272,23 +272,23 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-blue) 100%);
-    color: white;
+    background: #1f3b75;
+    color: #f8fafc;
 }
 
 .btn-secondary {
-    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-    color: white;
+    background: #4b5563;
+    color: #f8fafc;
 }
 
 .btn-success {
-    background: linear-gradient(135deg, #10b981 0%, var(--success-green) 100%);
-    color: white;
+    background: #0f766e;
+    color: #f8fafc;
 }
 
 .btn-danger {
-    background: linear-gradient(135deg, #ef4444 0%, var(--danger-red) 100%);
-    color: white;
+    background: #b91c1c;
+    color: #f8fafc;
 }
 
 .btn-icon {
@@ -306,23 +306,23 @@
 }
 
 .btn-icon:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.16);
 }
 
 .btn-view {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    color: white;
+    background: #334155;
+    color: #f8fafc;
 }
 
 .btn-edit {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    color: white;
+    background: #475569;
+    color: #f8fafc;
 }
 
 .btn-delete {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    color: white;
+    background: #7f1d1d;
+    color: #f8fafc;
 }
 
 /* ============================================
@@ -700,8 +700,8 @@ select.form-control {
 .global-loader {
     position: fixed;
     inset: 0;
-    background: radial-gradient(circle at center, rgba(30,58,138,.35) 0%, rgba(17,24,39,.72) 70%);
-    backdrop-filter: blur(4px);
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px);
     z-index: 9999;
     display: flex;
     align-items: center;
@@ -709,29 +709,28 @@ select.form-control {
 }
 
 .loader-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
-    border-radius: 18px;
-    padding: 20px 24px;
-    min-width: 340px;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 18px 20px;
+    min-width: 320px;
     display: flex;
     align-items: center;
-    gap: 14px;
-    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
-    border: 1px solid #dbeafe;
+    gap: 12px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
+    border: 1px solid #e5e7eb;
 }
 
 .loader-brand {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #1f3b75;
     color: #fff;
-    font-weight: 800;
-    letter-spacing: .5px;
+    font-weight: 700;
+    letter-spacing: .4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 6px 16px rgba(37,99,235,.35);
 }
 
 .loader-text strong {

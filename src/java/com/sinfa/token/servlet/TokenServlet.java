@@ -22,7 +22,6 @@ public class TokenServlet extends HttpServlet {
 
     private static final String UPLOAD_DIR = "C:/Users/informatica/Documents/token-proyecto/archivos";
 
-
     private TokenDAO tokenDAO;
     private EmpleadoDAO empleadoDAO;
     private DependenciaDAO dependenciaDAO;
@@ -919,6 +918,7 @@ public class TokenServlet extends HttpServlet {
         request.getRequestDispatcher("tokens.jsp").forward(request, response);
     }
 
+
     private void descargarArchivo(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
@@ -1000,9 +1000,9 @@ public class TokenServlet extends HttpServlet {
             throw new IOException("El archivo no debe superar los 5MB");
         }
 
-        File uploadDir = new File(UPLOAD_DIR);
-        if (!uploadDir.exists()) {
-            uploadDir.mkdirs();
+        File uploadDirectory = new File(UPLOAD_DIR);
+        if (!uploadDirectory.exists()) {
+            uploadDirectory.mkdirs();
         }
 
         String uniqueFileName = FileUtil.generateUniqueFileName(fileName);
