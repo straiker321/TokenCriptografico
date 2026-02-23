@@ -693,3 +693,74 @@ select.form-control {
 .mt-2 { margin-top: 16px; }
 .mb-2 { margin-bottom: 16px; }
 .p-2 { padding: 16px; }
+
+/* ============================================
+   LOADER GLOBAL Y ESTADOS DE CARGA
+   ============================================ */
+.global-loader {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(30,58,138,.35) 0%, rgba(17,24,39,.72) 70%);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loader-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+    border-radius: 18px;
+    padding: 20px 24px;
+    min-width: 340px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
+    border: 1px solid #dbeafe;
+}
+
+.loader-brand {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    color: #fff;
+    font-weight: 800;
+    letter-spacing: .5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 16px rgba(37,99,235,.35);
+}
+
+.loader-text strong {
+    display: block;
+    color: #1e3a8a;
+    font-size: 14px;
+    margin-bottom: 2px;
+}
+
+.loader-text p {
+    margin: 0;
+    color: #4b5563;
+    font-size: 12px;
+}
+
+.loader-spinner {
+    width: 26px;
+    height: 26px;
+    border: 3px solid #bfdbfe;
+    border-top-color: #1d4ed8;
+    border-radius: 50%;
+    animation: giroLoader .75s linear infinite;
+}
+
+.btn.loading {
+    pointer-events: none;
+    opacity: 0.85;
+}
+
+@keyframes giroLoader {
+    to { transform: rotate(360deg); }
+}

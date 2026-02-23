@@ -45,7 +45,7 @@ public class FileUploadServlet extends HttpServlet {
             
             // Validar extensión
             if (!FileUtil.isValidExtension(fileName)) {
-                response.getWriter().write("{\"error\":\"Solo se permiten archivos PDF, JPG, PNG\"}");
+                response.getWriter().write("{\"error\":\"Solo se permiten archivos PDF, JPG, PNG, DOC, DOCX, XLS y XLSX\"}");
                 return;
             }
             
