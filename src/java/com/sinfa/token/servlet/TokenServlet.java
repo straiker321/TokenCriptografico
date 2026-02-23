@@ -367,7 +367,7 @@ public class TokenServlet extends HttpServlet {
 
                 // Eliminar archivo anterior si existe
                 if (archivoAnterior != null && !archivoAnterior.isEmpty()) {
-                    FileUtil.deleteFile(archivoAnterior);
+                    eliminarArchivoSubido(archivoAnterior);
                     System.out.println("  - Archivo anterior eliminado: " + archivoAnterior);
                 }
             } else {
@@ -965,12 +965,35 @@ public class TokenServlet extends HttpServlet {
         System.out.println("✓ Archivo servido correctamente: " + fileName);
     }
 
+
+    private void eliminarArchivoSubido(String fileName) {
+        if (fileName == null || fileName.trim().isEmpty()) {
+            return;
+        }
+
+        try {
+            File file = new File(UPLOAD_DIR, fileName).getCanonicalFile();
+            File baseDir = new File(UPLOAD_DIR).getCanonicalFile();
+
+            if (!file.getPath().startsWith(baseDir.getPath())) {
+                System.err.println("⚠ Intento de eliminar archivo fuera del directorio permitido: " + fileName);
+                return;
+            }
+
+            if (file.exists() && !file.delete()) {
+                System.err.println("⚠ No se pudo eliminar archivo: " + file.getAbsolutePath());
+            }
+        } catch (IOException e) {
+            System.err.println("⚠ Error al eliminar archivo: " + e.getMessage());
+        }
+    }
+
     private String guardarArchivo(Part filePart) throws IOException {
 
         String fileName = getFileName(filePart);
 
         if (!FileUtil.isValidExtension(fileName)) {
-            throw new IOException("Solo se permiten archivos PDF, JPG, PNG");
+            throw new IOException("Solo se permiten archivos PDF, JPG, PNG, DOC, DOCX, XLS y XLSX");
         }
 
         if (!FileUtil.isValidFileSize(filePart.getSize())) {

@@ -905,8 +905,11 @@ function validarBusqueda() {
 
 
 function validarFormularioEditarAdmin(event) {
-    const dniEdit = document.getElementById('dniAsignaEdit')?.value?.trim() || '';
-    const dniOriginal = document.getElementById('dniAsignaEditOriginal')?.value?.trim() || '';
+    const inputDniEdit = document.getElementById('dniAsignaEdit');
+    const inputDniOriginal = document.getElementById('dniAsignaEditOriginal');
+
+    const dniEdit = inputDniEdit && inputDniEdit.value ? inputDniEdit.value.trim() : '';
+    const dniOriginal = inputDniOriginal && inputDniOriginal.value ? inputDniOriginal.value.trim() : '';
 
     if (!/^\d{8}$/.test(dniEdit)) {
         alert('El DNI del usuario asignado debe tener 8 dígitos.');

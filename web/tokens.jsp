@@ -498,7 +498,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Documento Sustento (PDF, JPG, PNG)</label>
+                    <label>Documento Sustento (PDF, JPG, PNG, DOC, DOCX, XLS, XLSX)</label>
                     <input type="file" name="docSustento" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
                     <small class="form-hint">Máximo 5MB</small>
                 </div>
