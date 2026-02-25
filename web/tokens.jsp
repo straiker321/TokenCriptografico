@@ -286,8 +286,8 @@
                                     <!-- ELIMINAR: Solo ADMIN -->
                                     <% if (mostrarEliminar) { %>
                                     <button class="btn-icon btn-delete"
-                                            onclick="eliminarToken(<%= token.getIdasignatoken() %>)"
-                                            title="Ocultar">
+                                            onclick="abrirModalEliminarToken(<%= token.getIdasignatoken() %>)"
+                                            title="Borrar token">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                     <% } %>
@@ -405,8 +405,11 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" onclick="eliminarTokenDesdeModal()">
-                        <i class="fas fa-trash"></i> ELIMINAR
+                    <button type="button" class="btn btn-danger" onclick="eliminarTokenDesdeModal('hide')">
+                        <i class="fas fa-eye-slash"></i> OCULTAR
+                    </button>
+                    <button type="button" class="btn btn-delete-hard" id="btnEliminarDefinitivoModal" onclick="eliminarTokenDesdeModal('hard')" style="display:none;">
+                        <i class="fas fa-trash-alt"></i> ELIMINAR DEFINITIVO
                     </button>
                     <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalEditarAdmin')">
                         <i class="fas fa-times"></i> CANCELAR
@@ -776,6 +779,37 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL: OPCIONES DE BORRADO -->
+    <div class="modal" id="modalEliminarToken">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-trash"></i> Borrar Token</h3>
+                <button class="modal-close" onclick="cerrarModal('modalEliminarToken')">&times;</button>
+            </div>
+
+            <div style="padding: 20px;">
+                <p>Seleccione la acción a realizar:</p>
+                <ul style="margin: 10px 0 0 18px; color: #444;">
+                    <li><strong>Ocultar:</strong> reversible.</li>
+                    <li><strong>Eliminar definitivo:</strong> irreversible.</li>
+                </ul>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" onclick="confirmarEliminarDesdeModal('hide')">
+                    <i class="fas fa-eye-slash"></i> OCULTAR
+                </button>
+                <button type="button" class="btn btn-delete-hard" onclick="confirmarEliminarDesdeModal('hard')">
+                    <i class="fas fa-trash-alt"></i> ELIMINAR DEFINITIVO
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalEliminarToken')">
+                    <i class="fas fa-times"></i> CANCELAR
+                </button>
+            </div>
         </div>
     </div>
 

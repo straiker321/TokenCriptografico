@@ -436,6 +436,29 @@ public class TokenDAO {
     }
 
 
+
+
+    public boolean eliminarDefinitivo(int id) {
+        String sql = "DELETE FROM t_m_asigna_token WHERE idasignatoken = ?";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            int filasAfectadas = ps.executeUpdate();
+
+            if (filasAfectadas > 0) {
+                System.out.println("✓ Token eliminado definitivamente: " + id);
+                return true;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("✗ Error al eliminar definitivamente token: " + e.getMessage());
+        }
+
+        return false;
+    }
+
     public boolean restaurar(int id) {
         String sql = "UPDATE t_m_asigna_token SET estado = 1, fecmod = CURRENT_TIMESTAMP WHERE idasignatoken = ?";
 

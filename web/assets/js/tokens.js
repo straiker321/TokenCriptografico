@@ -4,6 +4,8 @@
 
 // ========== VARIABLES GLOBALES ==========
 let tokenActual = null;
+let tokenEliminarPendiente = null;
+let tokenPermiteBorradoDefinitivo = false;
 
 // ========== INICIALIZACIÓN ==========
 document.addEventListener('DOMContentLoaded', function() {
@@ -135,7 +137,7 @@ function cerrarModal(idModal) {
 // Cerrar modal al hacer clic fuera
 window.onclick = function(event) {
     if (event.target.classList.contains('modal')) {
-        const modals = ['modalAsignar', 'modalConfirmarToken', 'modalDetalle', 'modalEditarAdmin'];
+        const modals = ['modalAsignar', 'modalConfirmarToken', 'modalDetalle', 'modalEditarAdmin', 'modalEliminarToken'];
         modals.forEach(modalId => {
             const modal = document.getElementById(modalId);
             if (modal && event.target === modal) {
@@ -269,8 +271,14 @@ function editarToken(id) {
                 return;
             }
             
-            // Si es ADMIN, mostrar formulario de edición completo
+            // Si es ADMIN y el token ya está completo, permitir editar confirmación final
             if (typeof esAdmin !== 'undefined' && esAdmin) {
+                const tokenCompleto = data.codempcon2 !== undefined && data.codempcon2 !== null && data.codempcon2 > 0;
+                if (tokenCompleto) {
+                    mostrarFormularioConfirmacion(id, data, true);
+                    return;
+                }
+
                 mostrarFormularioEdicionAdmin(id, data);
                 return;
             }
@@ -324,6 +332,12 @@ function mostrarFormularioEdicionAdmin(id, data) {
         document.getElementById('fechaAccionEdit').value = fechaFormateada;
         console.log('  - Fecha acción:', data.fechaAccion, '=>', fechaFormateada);
     }
+
+    tokenPermiteBorradoDefinitivo = !data.codempcon && !data.codempcon2;
+    const btnEliminarDefinitivoModal = document.getElementById('btnEliminarDefinitivoModal');
+    if (btnEliminarDefinitivoModal) {
+        btnEliminarDefinitivoModal.style.display = tokenPermiteBorradoDefinitivo ? 'inline-flex' : 'none';
+    }
     
     console.log('✓ Formulario de edición ADMIN llenado');
     
@@ -331,17 +345,38 @@ function mostrarFormularioEdicionAdmin(id, data) {
     mostrarModal('modalEditarAdmin');
 }
 
-function eliminarTokenDesdeModal() {
-    if (tokenActual) {
-        if (confirm('¿Está seguro de ocultar este token?\n\nEl registro NO se elimina físicamente, solo quedará invisible.')) {
+function eliminarTokenDesdeModal(modo) {
+    if (!tokenActual) return;
+
+    if (modo === 'hard') {
+        if (!tokenPermiteBorradoDefinitivo) {
+            alert('Solo se permite eliminar definitivamente tokens en estado PENDIENTE CONFIRMACIÓN INICIAL.');
+            return;
+        }
+
+        if (confirm(`¿Eliminar DEFINITIVAMENTE este token?
+
+Esta acción no se puede deshacer.`)) {
             cerrarModal('modalEditarAdmin');
             mostrarLoaderGlobal();
-            window.location.href = 'tokens?action=delete&id=' + tokenActual;
+            window.location.href = 'tokens?action=deleteHard&id=' + tokenActual;
         }
+        return;
+    }
+
+    if (confirm(`¿Está seguro de ocultar este token?
+
+El registro NO se elimina físicamente, solo quedará invisible.`)) {
+        cerrarModal('modalEditarAdmin');
+        mostrarLoaderGlobal();
+        window.location.href = 'tokens?action=delete&id=' + tokenActual;
     }
 }
 
-function mostrarFormularioConfirmacion(id, data) {
+function mostrarFormularioConfirmacion(id, data, modoEdicionFinal) {
+    if (typeof modoEdicionFinal === 'undefined') {
+        modoEdicionFinal = false;
+    }
     console.log('Mostrando formulario de confirmación');
     
     // Llenar SECCIÓN 1: Datos del token registrado (solo lectura)
@@ -499,8 +534,77 @@ function mostrarFormularioConfirmacion(id, data) {
         seccionFinal.querySelectorAll('[required]').forEach(el => el.required = true);
         
     } else {
-        alert('Este token ya tiene ambas confirmaciones registradas');
-        return;
+        if (!modoEdicionFinal) {
+            alert('Este token ya tiene ambas confirmaciones registradas');
+            return;
+        }
+
+        console.log('→ Editando confirmación final de token completo');
+        document.getElementById('actionConfirmar').value = 'confirmar2edit';
+        seccionInicial.style.display = 'block';
+        seccionFinal.style.display = 'block';
+
+        seccionInicial.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.name && el.name !== 'idToken') {
+                el.disabled = true;
+            }
+        });
+        seccionInicial.querySelectorAll('[required]').forEach(el => el.required = false);
+
+        document.getElementById('dniConf1').value = data.dniConf1 || '';
+        document.getElementById('nombreConf1').value = data.nombreConf1 || '';
+        document.getElementById('estadoConf1').value = data.estadoConf1 || '';
+        document.getElementById('dependenciaConf1').value = data.dependenciaConf1 || '';
+        if (data.dniConf1 && (!data.nombreConf1 || !data.dependenciaConf1)) {
+            buscarEmpleado(data.dniConf1, 'conf1');
+        }
+
+        const selectTieneToken2 = seccionFinal.querySelector('select[name="tieneToken2"]');
+        if (selectTieneToken2 && data.tieneTokenConf2) {
+            const option = Array.from(selectTieneToken2.options).find(opt => opt.text.trim() === data.tieneTokenConf2.trim());
+            if (option) selectTieneToken2.value = option.value;
+        }
+
+        const selectEstadoToken2 = seccionFinal.querySelector('select[name="estadoToken2"]');
+        if (selectEstadoToken2 && data.estadoTokenConf2) {
+            const option = Array.from(selectEstadoToken2.options).find(opt => opt.text.trim() === data.estadoTokenConf2.trim());
+            if (option) {
+                selectEstadoToken2.value = option.value;
+                mostrarUnidad(selectEstadoToken2.value, '2');
+            }
+        }
+
+        const selectUnidad2 = seccionFinal.querySelector('select[name="unidadEntrega2"]');
+        if (selectUnidad2 && data.unidadEntregaConf2) {
+            selectUnidad2.value = data.unidadEntregaConf2;
+        }
+
+        const inputDniConf2 = seccionFinal.querySelector('input[name="dniConfirma2"]');
+        if (inputDniConf2) inputDniConf2.value = data.dniConf2 || '';
+
+        const inputNombreConf2 = document.getElementById('nombreConf2');
+        const inputEstadoConf2 = document.getElementById('estadoConf2');
+        const inputDependenciaConf2 = document.getElementById('dependenciaConf2');
+        if (inputNombreConf2) inputNombreConf2.value = data.nombreConf2 || '';
+        if (inputEstadoConf2) inputEstadoConf2.value = data.estadoConf2 || '';
+        if (inputDependenciaConf2) inputDependenciaConf2.value = data.dependenciaConf2 || '';
+        if (data.dniConf2 && (!data.nombreConf2 || !data.dependenciaConf2)) {
+            buscarEmpleado(data.dniConf2, 'conf2');
+        }
+
+        const inputFechaEntrega2 = seccionFinal.querySelector('input[name="fechaEntrega2"]');
+        if (inputFechaEntrega2) {
+            inputFechaEntrega2.value = normalizarFechaInput(data.fechaConf2 || '');
+        }
+
+        const textareaObs2 = seccionFinal.querySelector('textarea[name="observaciones2"]');
+        if (textareaObs2) textareaObs2.value = data.obsConf2 || '';
+
+        seccionFinal.querySelectorAll('input, select, textarea').forEach(el => {
+            if (!el.readOnly && el.type !== 'button') {
+                el.disabled = false;
+            }
+        });
     }
     
     mostrarModal('modalConfirmarToken');
@@ -569,9 +673,40 @@ function verDetalle(id) {
 }
 
 // ========== ELIMINAR TOKEN ==========
-function eliminarToken(id) {
-    if (confirm('¿Está seguro de ocultar este token?\n\nEl registro NO se elimina físicamente, solo quedará invisible.')) {
-        console.log('Eliminando token:', id);
+function abrirModalEliminarToken(id) {
+    tokenEliminarPendiente = id;
+    mostrarModal('modalEliminarToken');
+}
+
+function confirmarEliminarDesdeModal(modo) {
+    if (!tokenEliminarPendiente) return;
+    cerrarModal('modalEliminarToken');
+    const id = tokenEliminarPendiente;
+    tokenEliminarPendiente = null;
+    eliminarToken(id, modo);
+}
+
+function eliminarToken(id, modo) {
+    if (!modo) {
+        abrirModalEliminarToken(id);
+        return;
+    }
+
+    if (modo === 'hard') {
+        if (confirm(`¿Eliminar DEFINITIVAMENTE este token?
+
+Esta acción no se puede deshacer.`)) {
+            console.log('Eliminando definitivamente token:', id);
+            mostrarLoaderGlobal();
+            window.location.href = 'tokens?action=deleteHard&id=' + id;
+        }
+        return;
+    }
+
+    if (confirm(`¿Está seguro de ocultar este token?
+
+El registro NO se elimina físicamente, solo quedará invisible.`)) {
+        console.log('Ocultando token:', id);
         mostrarLoaderGlobal();
         window.location.href = 'tokens?action=delete&id=' + id;
     }

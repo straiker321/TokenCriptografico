@@ -325,6 +325,12 @@
     color: #f8fafc;
 }
 
+.btn-delete-hard {
+    background: #450a0a;
+    color: #f8fafc;
+}
+
+
 /* ============================================
    ACTION BUTTONS
    ============================================ */
@@ -762,4 +768,13 @@ select.form-control {
 
 @keyframes giroLoader {
     to { transform: rotate(360deg); }
+}
+
+.btn.btn-delete-hard {
+    background: #450a0a;
+    color: #f8fafc;
+}
+
+.btn.btn-delete-hard:hover {
+    background: #3f0a0a;
 }

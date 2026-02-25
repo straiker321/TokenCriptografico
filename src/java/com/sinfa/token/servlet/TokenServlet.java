@@ -57,6 +57,8 @@ public class TokenServlet extends HttpServlet {
                 obtenerTokenJSON(request, response);
             } else if ("delete".equals(action)) {
                 eliminarToken(request, response, usuario);
+            } else if ("deleteHard".equals(action)) {
+                eliminarTokenDefinitivo(request, response, usuario);
             } else if ("restore".equals(action)) {
                 restaurarToken(request, response, usuario);
             } else if ("buscar".equals(action)) {
@@ -98,6 +100,8 @@ public class TokenServlet extends HttpServlet {
                 confirmarEntregaInicial(request, response, usuario);
             } else if ("confirmar2".equals(action)) {
                 confirmarEntregaFinal(request, response, usuario);
+            } else if ("confirmar2edit".equals(action)) {
+                actualizarConfirmacionFinal(request, response, usuario);
             } else {
                 System.out.println("⚠ Action no reconocida: " + action);
                 response.sendRedirect("tokens");
@@ -596,6 +600,116 @@ public class TokenServlet extends HttpServlet {
         response.sendRedirect("tokens");
     }
 
+
+
+    private void actualizarConfirmacionFinal(HttpServletRequest request, HttpServletResponse response, Usuario usuario)
+            throws ServletException, IOException {
+
+        if (!usuario.isAdmin()) {
+            request.setAttribute("error", "Solo ADMIN puede editar confirmación final");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        Integer idToken = parseEnteroSeguro(request.getParameter("idToken"));
+        if (idToken == null) {
+            request.setAttribute("error", "ID de token inválido");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        Token token = tokenDAO.obtenerPorId(idToken);
+        if (token == null) {
+            request.setAttribute("error", "Token no encontrado");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        if (token.getEstado() == 0) {
+            request.setAttribute("error", "No puede editar confirmaciones de un token oculto");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        if (token.getCodempcon() == null || token.getCodempcon2() == null) {
+            request.setAttribute("warning", "Solo se puede editar confirmación final en tokens completos");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        String dniConfirma = request.getParameter("dniConfirma2");
+        Integer tieneToken = parseEnteroSeguro(request.getParameter("tieneToken2"));
+        Integer estadoToken = parseEnteroSeguro(request.getParameter("estadoToken2"));
+        String fechaEntrega = request.getParameter("fechaEntrega2");
+        java.sql.Date fechaEntregaDate = parseFechaSeguro(fechaEntrega);
+        String observaciones = request.getParameter("observaciones2");
+        String unidadEntregaStr = request.getParameter("unidadEntrega2");
+
+        if (!ValidationUtil.isValidDNI(dniConfirma)
+                || tieneToken == null || (tieneToken != 1 && tieneToken != 2)
+                || estadoToken == null || estadoToken < 1 || estadoToken > 4
+                || fechaEntregaDate == null || esFechaFutura(fechaEntregaDate)) {
+            request.setAttribute("error", "Datos inválidos para editar confirmación final");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        if (estadoToken == 4 && (unidadEntregaStr == null || unidadEntregaStr.trim().isEmpty())) {
+            request.setAttribute("error", "Debe seleccionar unidad de entrega para estado ENTREGADO A UNIDAD ANTERIOR");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        Empleado empConfirma = empleadoDAO.buscarPorDNI(dniConfirma);
+        if (empConfirma == null) {
+            request.setAttribute("error", "Empleado no encontrado");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        String archivoAnterior = token.getDocSustentoFinal();
+        String nombreArchivo = archivoAnterior;
+        Part filePart = request.getPart("docSustentoFinal");
+        if (filePart != null && filePart.getSize() > 0) {
+            nombreArchivo = guardarArchivo(filePart);
+            if (archivoAnterior != null && !archivoAnterior.isEmpty()) {
+                eliminarArchivoSubido(archivoAnterior);
+            }
+        }
+
+        token.setNumdnitokcon2(dniConfirma);
+        token.setCodemptokcon2(empConfirma.getCempCoEmp());
+        token.setUniemptokcon2(empConfirma.getCempCoDepend());
+        token.setFlgtokcon2(tieneToken);
+        token.setEsttokcon2(estadoToken);
+
+        if (estadoToken == 4) {
+            Integer unidadEntrega = parseEnteroSeguro(unidadEntregaStr);
+            if (unidadEntrega == null || unidadEntrega <= 0) {
+                request.setAttribute("error", "Unidad de entrega inválida");
+                listarTokens(request, response, usuario);
+                return;
+            }
+            token.setUnienttokcon2(unidadEntrega);
+        } else {
+            token.setUnienttokcon2(null);
+        }
+
+        token.setFecentcon2(fechaEntregaDate);
+        token.setTxtobscon2(observaciones);
+        token.setDocSustentoFinal(nombreArchivo);
+        token.setUsumod(usuario.getIdUsuario());
+
+        boolean ok = tokenDAO.actualizarConfirmacionFinal(token);
+        if (ok) {
+            request.setAttribute("success", "✓ Confirmación final actualizada correctamente");
+        } else {
+            request.setAttribute("error", "Error al actualizar confirmación final");
+        }
+
+        listarTokens(request, response, usuario);
+    }
+
     private Integer parseEnteroSeguro(String valor) {
         try {
             return Integer.valueOf(valor);
@@ -865,6 +979,51 @@ public class TokenServlet extends HttpServlet {
             System.out.println("✓ Token " + idToken + " eliminado por: " + usuario.getUsername());
         } else {
             request.setAttribute("error", "Error al eliminar");
+        }
+
+        listarTokens(request, response, usuario);
+    }
+
+
+
+    private void eliminarTokenDefinitivo(HttpServletRequest request, HttpServletResponse response, Usuario usuario)
+            throws ServletException, IOException {
+
+        if (!usuario.isAdmin()) {
+            request.setAttribute("error", "Solo ADMIN puede eliminar definitivamente");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        Integer idToken = parseEnteroSeguro(request.getParameter("id"));
+        if (idToken == null) {
+            request.setAttribute("error", "ID de token inválido");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        Token token = tokenDAO.obtenerPorId(idToken);
+        if (token == null) {
+            request.setAttribute("error", "Token no encontrado");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        if (!token.isPendienteConfirmacionInicial()) {
+            request.setAttribute("warning", "Solo puede eliminar definitivamente tokens en estado PENDIENTE CONFIRMACIÓN INICIAL");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        boolean ok = tokenDAO.eliminarDefinitivo(idToken);
+
+        if (ok) {
+            eliminarArchivoSubido(token.getDocSustento());
+            eliminarArchivoSubido(token.getDocSustentoEntrega());
+            eliminarArchivoSubido(token.getDocSustentoFinal());
+            request.setAttribute("success", "✓ Token eliminado definitivamente");
+        } else {
+            request.setAttribute("error", "No se pudo eliminar definitivamente el token");
         }
 
         listarTokens(request, response, usuario);
