@@ -102,6 +102,8 @@ public class TokenServlet extends HttpServlet {
                 confirmarEntregaFinal(request, response, usuario);
             } else if ("confirmar2edit".equals(action)) {
                 actualizarConfirmacionFinal(request, response, usuario);
+            } else if ("confirmar1edit".equals(action)) {
+                actualizarConfirmacionInicial(request, response, usuario);
             } else {
                 System.out.println("⚠ Action no reconocida: " + action);
                 response.sendRedirect("tokens");
@@ -705,6 +707,116 @@ public class TokenServlet extends HttpServlet {
             request.setAttribute("success", "✓ Confirmación final actualizada correctamente");
         } else {
             request.setAttribute("error", "Error al actualizar confirmación final");
+        }
+
+        listarTokens(request, response, usuario);
+    }
+
+
+
+    private void actualizarConfirmacionInicial(HttpServletRequest request, HttpServletResponse response, Usuario usuario)
+            throws ServletException, IOException {
+
+        if (!usuario.isAdmin()) {
+            request.setAttribute("error", "Solo ADMIN puede editar confirmación inicial");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        Integer idToken = parseEnteroSeguro(request.getParameter("idToken"));
+        if (idToken == null) {
+            request.setAttribute("error", "ID de token inválido");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        Token token = tokenDAO.obtenerPorId(idToken);
+        if (token == null) {
+            request.setAttribute("error", "Token no encontrado");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        if (token.getEstado() == 0) {
+            request.setAttribute("error", "No puede editar confirmaciones de un token oculto");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        if (token.getCodempcon() == null || token.getCodempcon2() == null) {
+            request.setAttribute("warning", "Solo se puede editar confirmaciones en tokens completos");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        String dniConfirma = request.getParameter("dniConfirma");
+        Integer tieneToken = parseEnteroSeguro(request.getParameter("tieneToken"));
+        Integer estadoToken = parseEnteroSeguro(request.getParameter("estadoToken"));
+        String fechaEntrega = request.getParameter("fechaEntrega");
+        java.sql.Date fechaEntregaDate = parseFechaSeguro(fechaEntrega);
+        String observaciones = request.getParameter("observaciones");
+        String unidadEntregaStr = request.getParameter("unidadEntrega");
+
+        if (!ValidationUtil.isValidDNI(dniConfirma)
+                || tieneToken == null || (tieneToken != 1 && tieneToken != 2)
+                || estadoToken == null || estadoToken < 1 || estadoToken > 4
+                || fechaEntregaDate == null || esFechaFutura(fechaEntregaDate)) {
+            request.setAttribute("error", "Datos inválidos para editar confirmación inicial");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        if (estadoToken == 4 && (unidadEntregaStr == null || unidadEntregaStr.trim().isEmpty())) {
+            request.setAttribute("error", "Debe seleccionar unidad de entrega para estado ENTREGADO A UNIDAD ANTERIOR");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        Empleado empConfirma = empleadoDAO.buscarPorDNI(dniConfirma);
+        if (empConfirma == null) {
+            request.setAttribute("error", "Empleado no encontrado");
+            listarTokens(request, response, usuario);
+            return;
+        }
+
+        String archivoAnterior = token.getDocSustentoEntrega();
+        String nombreArchivo = archivoAnterior;
+        Part filePart = request.getPart("docSustentoEntrega");
+        if (filePart != null && filePart.getSize() > 0) {
+            nombreArchivo = guardarArchivo(filePart);
+            if (archivoAnterior != null && !archivoAnterior.isEmpty()) {
+                eliminarArchivoSubido(archivoAnterior);
+            }
+        }
+
+        token.setNumdnitokcon(dniConfirma);
+        token.setCodemptokcon(empConfirma.getCempCoEmp());
+        token.setUniemptokcon(empConfirma.getCempCoDepend());
+        token.setFlgtokcon(tieneToken);
+        token.setEsttokcon(estadoToken);
+
+        if (estadoToken == 4) {
+            Integer unidadEntrega = parseEnteroSeguro(unidadEntregaStr);
+            if (unidadEntrega == null || unidadEntrega <= 0) {
+                request.setAttribute("error", "Unidad de entrega inválida");
+                listarTokens(request, response, usuario);
+                return;
+            }
+            token.setUnienttokcon(unidadEntrega);
+        } else {
+            token.setUnienttokcon(null);
+        }
+
+        token.setFecentcon(fechaEntregaDate);
+        token.setTxtobscon(observaciones);
+        token.setDocSustentoEntrega(nombreArchivo);
+        token.setUsumod(usuario.getIdUsuario());
+
+        boolean ok = tokenDAO.actualizarConfirmacionInicial(token);
+        if (ok) {
+            request.setAttribute("success", "✓ Confirmación inicial actualizada correctamente");
+        } else {
+            request.setAttribute("error", "Error al actualizar confirmación inicial");
         }
 
         listarTokens(request, response, usuario);

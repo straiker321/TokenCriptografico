@@ -379,12 +379,32 @@
                         <div class="form-group">
                             <label>DNI Usuario que Recibe</label>
                             <input type="text" name="dniUsuarioRecibe" id="dniRecibeEdit" class="form-control"
-                                   pattern="[0-9]{8}" maxlength="8">
+                                   pattern="[0-9]{8}" maxlength="8"
+                                   onblur="buscarEmpleado(this.value, 'editRecibe')">
                         </div>
+                        <div class="form-group">
+                            <label>Nombre Usuario que Recibe</label>
+                            <input type="text" id="nombreEditRecibe" class="form-control" readonly>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Estado Usuario que Recibe</label>
+                            <input type="text" id="estadoEditRecibe" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Dependencia Usuario que Recibe</label>
+                            <input type="text" id="dependenciaEditRecibe" class="form-control" readonly>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
                         <div class="form-group">
                             <label>Fecha de Acción <span style="color: red;">(*)</span></label>
                             <input type="date" name="fechaAccion" id="fechaAccionEdit" class="form-control" required>
                         </div>
+                        <div class="form-group"></div>
                     </div>
 
                     <div class="form-group">
@@ -770,13 +790,22 @@
                     </div>
                 </div>
 
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalConfirmarToken')">
-                        <i class="fas fa-times"></i> REGRESAR
-                    </button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-save"></i> GRABAR
-                    </button>
+                <div class="modal-footer" style="justify-content: space-between; gap: 12px;">
+                    <div id="selectorEdicionConfirmacion" style="display:none; align-items:center; gap:8px;">
+                        <label for="tipoEdicionConfirmacion" style="font-weight:600; color:#374151;">Editar:</label>
+                        <select id="tipoEdicionConfirmacion" class="form-control" style="min-width:260px;" onchange="cambiarTipoEdicionConfirmacion(this.value)">
+                            <option value="final">Confirmación Final</option>
+                            <option value="inicial">Confirmación Inicial</option>
+                        </select>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalConfirmarToken')">
+                            <i class="fas fa-times"></i> REGRESAR
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> GRABAR
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>

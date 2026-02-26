@@ -6,6 +6,7 @@
 let tokenActual = null;
 let tokenEliminarPendiente = null;
 let tokenPermiteBorradoDefinitivo = false;
+let modoEdicionConfirmacionCompleta = false;
 
 // ========== INICIALIZACIÓN ==========
 document.addEventListener('DOMContentLoaded', function() {
@@ -128,6 +129,9 @@ function cerrarModal(idModal) {
                 inputFechaEntrega1.type = 'date';
                 inputFechaEntrega1.placeholder = '';
             }
+            modoEdicionConfirmacionCompleta = false;
+            const selector = document.getElementById('selectorEdicionConfirmacion');
+            if (selector) selector.style.display = 'none';
         }
         
         console.log('✓ Modal cerrado:', idModal);
@@ -172,6 +176,10 @@ function buscarEmpleado(dni, tipo) {
         nombreId = 'nombreEditAsigna';
         estadoId = 'estadoEditAsigna';
         dependenciaId = 'dependenciaEditAsigna';
+    } else if (tipo === 'editRecibe') {
+        nombreId = 'nombreEditRecibe';
+        estadoId = 'estadoEditRecibe';
+        dependenciaId = 'dependenciaEditRecibe';
     } else if (tipo === 'conf1') {
         nombreId = 'nombreConf1';
         estadoId = 'estadoConf1';
@@ -235,6 +243,10 @@ function limpiarDatosEmpleado(tipo) {
         nombreId = 'nombreEditAsigna';
         estadoId = 'estadoEditAsigna';
         dependenciaId = 'dependenciaEditAsigna';
+    } else if (tipo === 'editRecibe') {
+        nombreId = 'nombreEditRecibe';
+        estadoId = 'estadoEditRecibe';
+        dependenciaId = 'dependenciaEditRecibe';
     } else if (tipo === 'conf1') {
         nombreId = 'nombreConf1';
         estadoId = 'estadoConf1';
@@ -271,15 +283,25 @@ function editarToken(id) {
                 return;
             }
             
-            // Si es ADMIN y el token ya está completo, permitir editar confirmación final
+            // Flujo ADMIN según estado del proceso
             if (typeof esAdmin !== 'undefined' && esAdmin) {
-                const tokenCompleto = data.codempcon2 !== undefined && data.codempcon2 !== null && data.codempcon2 > 0;
-                if (tokenCompleto) {
-                    mostrarFormularioConfirmacion(id, data, true);
+                const tieneInicial = data.codempcon !== undefined && data.codempcon !== null && data.codempcon > 0;
+                const tieneFinal = data.codempcon2 !== undefined && data.codempcon2 !== null && data.codempcon2 > 0;
+
+                // 1) Sin confirmación inicial: edición de asignación base
+                if (!tieneInicial) {
+                    mostrarFormularioEdicionAdmin(id, data);
                     return;
                 }
 
-                mostrarFormularioEdicionAdmin(id, data);
+                // 2) Con confirmación inicial y sin final: registrar confirmación final
+                if (!tieneFinal) {
+                    mostrarFormularioConfirmacion(id, data, false);
+                    return;
+                }
+
+                // 3) Token completo: permitir editar inicial o final
+                mostrarFormularioConfirmacion(id, data, true);
                 return;
             }
             
@@ -322,6 +344,10 @@ function mostrarFormularioEdicionAdmin(id, data) {
     
     // DNI que recibe
     document.getElementById('dniRecibeEdit').value = data.dniRecibe || '';
+    limpiarDatosEmpleado('editRecibe');
+    if (data.dniRecibe && /^\d{8}$/.test(data.dniRecibe)) {
+        buscarEmpleado(data.dniRecibe, 'editRecibe');
+    }
     
     // Documento sustento actual
     document.getElementById('docSustentoActual').value = data.docSustento || 'Sin archivo';
@@ -398,6 +424,9 @@ function mostrarFormularioConfirmacion(id, data, modoEdicionFinal) {
     const docSustentoEntregaCarga = document.getElementById('docSustentoEntregaCarga');
     const docSustentoEntregaVista = document.getElementById('docSustentoEntregaVista');
     const docSustentoEntregaActual = document.getElementById('docSustentoEntregaActual');
+    modoEdicionConfirmacionCompleta = false;
+    const selectorEdicion = document.getElementById('selectorEdicionConfirmacion');
+    if (selectorEdicion) selectorEdicion.style.display = 'none';
     
     // Determinar qué mostrar según el estado del token
     const tieneInicial = data.codempcon !== undefined && data.codempcon !== null && data.codempcon > 0;
@@ -539,8 +568,8 @@ function mostrarFormularioConfirmacion(id, data, modoEdicionFinal) {
             return;
         }
 
-        console.log('→ Editando confirmación final de token completo');
-        document.getElementById('actionConfirmar').value = 'confirmar2edit';
+        console.log('→ Editando confirmaciones de token completo');
+        modoEdicionConfirmacionCompleta = true;
         seccionInicial.style.display = 'block';
         seccionFinal.style.display = 'block';
 
@@ -558,6 +587,47 @@ function mostrarFormularioConfirmacion(id, data, modoEdicionFinal) {
         if (data.dniConf1 && (!data.nombreConf1 || !data.dependenciaConf1)) {
             buscarEmpleado(data.dniConf1, 'conf1');
         }
+
+        if (data.tieneTokenConf1) {
+            const selectTieneToken1 = seccionInicial.querySelector('select[name="tieneToken"]');
+            if (selectTieneToken1) {
+                const option = Array.from(selectTieneToken1.options).find(opt => opt.text.trim() === data.tieneTokenConf1.trim());
+                if (option) selectTieneToken1.value = option.value;
+            }
+        }
+
+        if (data.estadoTokenConf1) {
+            const selectEstadoToken1 = seccionInicial.querySelector('select[name="estadoToken"]');
+            if (selectEstadoToken1) {
+                const option = Array.from(selectEstadoToken1.options).find(opt => opt.text.trim() === data.estadoTokenConf1.trim());
+                if (option) {
+                    selectEstadoToken1.value = option.value;
+                    mostrarUnidad(selectEstadoToken1.value, '1');
+                }
+            }
+        }
+
+        const selectUnidad1 = seccionInicial.querySelector('select[name="unidadEntrega"]');
+        if (selectUnidad1 && data.unidadEntregaConf1) {
+            selectUnidad1.value = data.unidadEntregaConf1;
+        }
+
+        const inputFechaEntrega1 = seccionInicial.querySelector('input[name="fechaEntrega"]');
+        if (inputFechaEntrega1) {
+            inputFechaEntrega1.value = normalizarFechaInput(data.fechaConf1 || data.fechaEntregaConf1 || '');
+        }
+
+        const textareaObs1 = seccionInicial.querySelector('textarea[name="observaciones"]');
+        if (textareaObs1) textareaObs1.value = data.obsConf1 || '';
+
+        if (docSustentoEntregaActual) {
+            docSustentoEntregaActual.value = data.docSustentoEntrega || 'Sin archivo';
+        }
+        if (docSustentoEntregaVista) docSustentoEntregaVista.style.display = 'block';
+
+        document.getElementById('datoDniConf1').textContent = data.dniConf1 || '-';
+        document.getElementById('datoTieneConf1').textContent = data.tieneTokenConf1 || '-';
+        document.getElementById('datoEstadoConf1').textContent = data.estadoTokenConf1 || '-';
 
         const selectTieneToken2 = seccionFinal.querySelector('select[name="tieneToken2"]');
         if (selectTieneToken2 && data.tieneTokenConf2) {
@@ -605,9 +675,44 @@ function mostrarFormularioConfirmacion(id, data, modoEdicionFinal) {
                 el.disabled = false;
             }
         });
+
+        const selector = document.getElementById('selectorEdicionConfirmacion');
+        const selectTipo = document.getElementById('tipoEdicionConfirmacion');
+        if (selector && selectTipo) {
+            selector.style.display = 'inline-flex';
+            selectTipo.value = 'final';
+            cambiarTipoEdicionConfirmacion('final');
+        }
     }
     
     mostrarModal('modalConfirmarToken');
+}
+
+function cambiarTipoEdicionConfirmacion(tipo) {
+    if (!modoEdicionConfirmacionCompleta) return;
+
+    const seccionInicial = document.getElementById('seccionConfirmacionInicial');
+    const seccionFinal = document.getElementById('seccionConfirmacionFinal');
+    if (!seccionInicial || !seccionFinal) return;
+
+    const editarInicial = tipo === 'inicial';
+    document.getElementById('actionConfirmar').value = editarInicial ? 'confirmar1edit' : 'confirmar2edit';
+
+    seccionInicial.querySelectorAll('input, select, textarea').forEach(el => {
+        if (el.name && el.name !== 'idToken') {
+            el.disabled = !editarInicial;
+        }
+    });
+    seccionFinal.querySelectorAll('input, select, textarea').forEach(el => {
+        if (el.name && el.name !== 'idToken') {
+            el.disabled = editarInicial;
+        }
+    });
+
+    const docSustentoEntregaCarga = document.getElementById('docSustentoEntregaCarga');
+    const docSustentoEntregaVista = document.getElementById('docSustentoEntregaVista');
+    if (docSustentoEntregaCarga) docSustentoEntregaCarga.style.display = editarInicial ? 'block' : 'none';
+    if (docSustentoEntregaVista) docSustentoEntregaVista.style.display = 'block';
 }
 
 // ========== VER DETALLE ==========
