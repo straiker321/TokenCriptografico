@@ -9,6 +9,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <div id="loginLoader" class="login-loader" style="display: none;">
+        <div class="login-loader-card">
+            <div class="login-loader-brand">SINFA</div>
+            <div class="login-loader-spinner"></div>
+            <p>Validando credenciales y cargando dashboard...</p>
+        </div>
+    </div>
+
     <div class="login-container">
         <!-- Lado izquierdo - Información -->
         <div class="login-left">
@@ -167,6 +175,7 @@
         
         // Validación del formulario
         document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const submitButton = document.querySelector('.btn-login');
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             
@@ -175,7 +184,19 @@
                 alert('Por favor complete todos los campos');
                 return false;
             }
+
+            mostrarLoaderLogin();
+            if (submitButton) {
+                submitButton.disabled = true;
+            }
         });
+
+        function mostrarLoaderLogin() {
+            const loader = document.getElementById('loginLoader');
+            if (loader) {
+                loader.style.display = 'flex';
+            }
+        }
         
         // Auto-ocultar alertas después de 5 segundos
         setTimeout(function() {
