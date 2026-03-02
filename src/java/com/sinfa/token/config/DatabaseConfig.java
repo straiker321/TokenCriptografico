@@ -11,11 +11,11 @@ import java.sql.SQLException;
  */
 public class DatabaseConfig {
     
-    // Configuración de la base de datos (sobrescribible por variables de entorno)
-    private static final String DB_DRIVER = getSetting("DB_DRIVER", "org.postgresql.Driver");
-    private static final String DB_URL = getSetting("DB_URL", "jdbc:postgresql://localhost:5432/token_db");
-    private static final String DB_USER = getSetting("DB_USER", "postgres");
-    private static final String DB_PASSWORD = getRequiredSetting("DB_PASSWORD");
+    // Configuración de la base de datos
+    private static final String DB_DRIVER = "org.postgresql.Driver";
+    private static final String DB_URL = "jdbc:postgresql://localhost:5432/token_db";
+    private static final String DB_USER = "postgres";
+    private static final String DB_PASSWORD = "12345"; // Cambiar por tu contraseña
     
     // Pool de conexiones básico
     private static Connection connection = null;
@@ -45,37 +45,6 @@ public class DatabaseConfig {
             e.printStackTrace();
             throw e;
         }
-    }
-
-    /**
-     * Obtiene una configuración desde variable de entorno o propiedad del sistema.
-     */
-    private static String getSetting(String key, String defaultValue) {
-        String envValue = System.getenv(key);
-        if (envValue != null && !envValue.trim().isEmpty()) {
-            return envValue.trim();
-        }
-
-        String systemValue = System.getProperty(key);
-        if (systemValue != null && !systemValue.trim().isEmpty()) {
-            return systemValue.trim();
-        }
-
-        return defaultValue;
-    }
-
-    /**
-     * Obtiene una configuración requerida desde variable de entorno o propiedad del sistema.
-     */
-    private static String getRequiredSetting(String key) {
-        String value = getSetting(key, null);
-        if (value == null) {
-            throw new IllegalStateException(
-                "Falta configuración requerida: " + key +
-                ". Defínela como variable de entorno o propiedad del sistema."
-            );
-        }
-        return value;
     }
     
     /**
