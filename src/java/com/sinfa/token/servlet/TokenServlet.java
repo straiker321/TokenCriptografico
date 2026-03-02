@@ -861,12 +861,17 @@ public class TokenServlet extends HttpServlet {
             return;
         }
 
+        int registrosAsigna = contarTokensActivosPorDni(dni, false);
+        int registrosRecibe = contarTokensActivosPorDni(dni, true);
+
         String json = String.format(
-                "{\"nombre\":\"%s\",\"estado\":\"%s\",\"dependencia\":\"%s\",\"codigo\":%d}",
+                "{\"nombre\":\"%s\",\"estado\":\"%s\",\"dependencia\":\"%s\",\"codigo\":%d,\"registrosAsigna\":%d,\"registrosRecibe\":%d}",
                 empleado.getNombreCompleto(),
                 empleado.getEstadoTexto(),
                 empleado.getDependencia(),
-                empleado.getCempCoEmp()
+                empleado.getCempCoEmp(),
+                registrosAsigna,
+                registrosRecibe
         );
 
         response.getWriter().write(json);
@@ -997,6 +1002,25 @@ public class TokenServlet extends HttpServlet {
             e.printStackTrace();
             response.getWriter().write("{\"error\":\"Error al obtener token: " + escapeJson(e.getMessage()) + "\"}");
         }
+    }
+
+    private int contarTokensActivosPorDni(String dni, boolean porRecibe) {
+        String campo = porRecibe ? "dniemprec" : "numdnitok";
+        String sql = "SELECT COUNT(*) FROM t_m_asigna_token WHERE " + campo + " = ? AND estado = 1";
+
+        try (java.sql.Connection conn = DatabaseConfig.getConnection();
+             java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, dni);
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (java.sql.SQLException e) {
+            System.err.println("✗ Error al contar tokens por DNI: " + e.getMessage());
+        }
+
+        return 0;
     }
 
     private String escapeJson(String str) {

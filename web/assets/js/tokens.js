@@ -179,6 +179,10 @@ function buscarEmpleado(dni, tipo) {
         nombreId = 'nombreEditRecibe';
         estadoId = 'estadoEditRecibe';
         dependenciaId = 'dependenciaEditRecibe';
+    } else if (tipo === 'recibeAsigna') {
+        nombreId = 'nombreRecibeAsigna';
+        estadoId = 'estadoRecibeAsigna';
+        dependenciaId = 'dependenciaRecibeAsigna';
     } else if (tipo === 'conf1') {
         nombreId = 'nombreConf1';
         estadoId = 'estadoConf1';
@@ -220,6 +224,13 @@ function buscarEmpleado(dni, tipo) {
                 
                 const dependenciaInput = document.getElementById(dependenciaId);
                 if (dependenciaInput) dependenciaInput.value = data.dependencia || '';
+
+                if (tipo === 'asigna' && Number(data.registrosAsigna || 0) > 0) {
+                    alert('Ya se registró ' + data.registrosAsigna + ' registro(s) para este DNI. ¿Desea agregar uno más?');
+                }
+                if (tipo === 'recibeAsigna' && Number(data.registrosRecibe || 0) > 0) {
+                    alert('Este Usuario ya tiene ' + data.registrosRecibe + ' registro(s) de Tokens recibidos. ¿Desea agregar uno más?');
+                }
                 
                 console.log('✓ Datos del empleado cargados');
             }
@@ -246,6 +257,10 @@ function limpiarDatosEmpleado(tipo) {
         nombreId = 'nombreEditRecibe';
         estadoId = 'estadoEditRecibe';
         dependenciaId = 'dependenciaEditRecibe';
+    } else if (tipo === 'recibeAsigna') {
+        nombreId = 'nombreRecibeAsigna';
+        estadoId = 'estadoRecibeAsigna';
+        dependenciaId = 'dependenciaRecibeAsigna';
     } else if (tipo === 'conf1') {
         nombreId = 'nombreConf1';
         estadoId = 'estadoConf1';

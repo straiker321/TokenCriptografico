@@ -447,77 +447,118 @@
             <form action="tokens" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="crear">
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Registrado Por <span style="color: red;">(*)</span></label>
-                        <select name="unidadRegistra" class="form-control" <%= !isAdmin ? "disabled" : "" %> required>
-                            <% if (dependencias != null) for (Dependencia dep : dependencias) { %>
-                            <option value="<%= dep.getCoDependencia() %>"
-                                    <%= dep.getCoDependencia() == unidadUsuario ? "selected" : "" %>>
-                                <%= dep.getDeDependencia() %>
-                            </option>
+                <div class="form-section" style="background: #f8fafc; border-left-color: #0ea5e9;">
+                    <h4><i class="fas fa-clipboard-list"></i> DATOS GENERALES</h4>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Registrado Por <span style="color: red;">(*)</span></label>
+                            <select name="unidadRegistra" class="form-control" <%= !isAdmin ? "disabled" : "" %> required>
+                                <% if (dependencias != null) for (Dependencia dep : dependencias) { %>
+                                <option value="<%= dep.getCoDependencia() %>"
+                                        <%= dep.getCoDependencia() == unidadUsuario ? "selected" : "" %>>
+                                    <%= dep.getDeDependencia() %>
+                                </option>
+                                <% } %>
+                            </select>
+                            <% if (!isAdmin) { %>
+                            <input type="hidden" name="unidadRegistra" value="<%= unidadUsuario %>">
                             <% } %>
-                        </select>
-                        <% if (!isAdmin) { %>
-                        <input type="hidden" name="unidadRegistra" value="<%= unidadUsuario %>">
-                        <% } %>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Acción <span style="color: red;">(*)</span></label>
+                            <select name="accion" class="form-control" <%= !isAdmin ? "disabled" : "" %> required>
+                                <option value="1" selected>EMISIÓN</option>
+                                <option value="2">INTERNAMIENTO</option>
+                            </select>
+                            <% if (!isAdmin) { %>
+                            <input type="hidden" name="accion" value="1">
+                            <% } %>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>Acción <span style="color: red;">(*)</span></label>
-                        <select name="accion" class="form-control" <%= !isAdmin ? "disabled" : "" %> required>
-                            <option value="1" selected>EMISIÓN</option>
-                            <option value="2">INTERNAMIENTO</option>
-                        </select>
-                        <% if (!isAdmin) { %>
-                        <input type="hidden" name="accion" value="1">
-                        <% } %>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>DNI Usuario a Asignar <span style="color: red;">(*)</span></label>
-                        <input type="text" name="dniUsuarioAsigna" class="form-control"
-                               pattern="[0-9]{8}" maxlength="8" placeholder="12345678"
-                               onblur="buscarEmpleado(this.value, 'asigna')" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Nombre</label>
-                        <input type="text" id="nombreAsigna" class="form-control" readonly>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>¿Fue confirmado?</label>
+                            <select class="form-control" disabled>
+                                <option value="2" selected>NO</option>
+                                <option value="1">SI</option>
+                            </select>
+                            <small class="form-hint">Informativo para flujo inicial de asignación.</small>
+                        </div>
+                        <div class="form-group"></div>
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Estado</label>
-                        <input type="text" id="estadoAsigna" class="form-control" readonly>
+                <div class="form-section" style="background: #fff7ed; border-left-color: #f97316;">
+                    <h4><i class="fas fa-id-card"></i> DATOS DE ASIGNACIÓN</h4>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>DNI Usuario a Asignar <span style="color: red;">(*)</span></label>
+                            <input type="text" name="dniUsuarioAsigna" class="form-control"
+                                   pattern="[0-9]{8}" maxlength="8" placeholder="12345678"
+                                   onblur="buscarEmpleado(this.value, 'asigna')" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nombre</label>
+                            <input type="text" id="nombreAsigna" class="form-control" readonly>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Estado</label>
+                            <input type="text" id="estadoAsigna" class="form-control" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Dependencia</label>
+                            <input type="text" id="dependenciaAsigna" class="form-control" readonly>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>DNI Usuario que Recibe</label>
+                            <input type="text" name="dniUsuarioRecibe" id="dniRecibeAsigna" class="form-control"
+                                   pattern="[0-9]{8}" maxlength="8"
+                                   onblur="buscarEmpleado(this.value, 'recibeAsigna')">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nombre Usuario que Recibe</label>
+                            <input type="text" id="nombreRecibeAsigna" class="form-control" readonly>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Estado Usuario que Recibe</label>
+                            <input type="text" id="estadoRecibeAsigna" class="form-control" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Dependencia Usuario que Recibe</label>
+                            <input type="text" id="dependenciaRecibeAsigna" class="form-control" readonly>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Fecha de Acción <span style="color: red;">(*)</span></label>
+                            <input type="date" name="fechaAccion" class="form-control" required>
+                        </div>
+                        <div class="form-group"></div>
                     </div>
 
                     <div class="form-group">
-                        <label>Dependencia</label>
-                        <input type="text" id="dependenciaAsigna" class="form-control" readonly>
+                        <label>Documento Sustento (PDF, JPG, PNG, DOC, DOCX, XLS, XLSX)</label>
+                        <input type="file" name="docSustento" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
+                        <small class="form-hint">Máximo 5MB</small>
                     </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>DNI Usuario que Recibe</label>
-                        <input type="text" name="dniUsuarioRecibe" class="form-control"
-                               pattern="[0-9]{8}" maxlength="8">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Fecha de Acción <span style="color: red;">(*)</span></label>
-                        <input type="date" name="fechaAccion" class="form-control" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Documento Sustento (PDF, JPG, PNG, DOC, DOCX, XLS, XLSX)</label>
-                    <input type="file" name="docSustento" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
-                    <small class="form-hint">Máximo 5MB</small>
                 </div>
 
                 <div class="modal-footer">
