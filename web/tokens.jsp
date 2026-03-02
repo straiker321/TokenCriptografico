@@ -425,12 +425,6 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" onclick="eliminarTokenDesdeModal('hide')">
-                        <i class="fas fa-eye-slash"></i> OCULTAR
-                    </button>
-                    <button type="button" class="btn btn-delete-hard" id="btnEliminarDefinitivoModal" onclick="eliminarTokenDesdeModal('hard')" style="display:none;">
-                        <i class="fas fa-trash-alt"></i> ELIMINAR DEFINITIVO
-                    </button>
                     <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalEditarAdmin')">
                         <i class="fas fa-times"></i> CANCELAR
                     </button>

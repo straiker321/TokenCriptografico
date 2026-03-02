@@ -5,7 +5,6 @@
 // ========== VARIABLES GLOBALES ==========
 let tokenActual = null;
 let tokenEliminarPendiente = null;
-let tokenPermiteBorradoDefinitivo = false;
 let modoEdicionConfirmacionCompleta = false;
 
 // ========== INICIALIZACIÓN ==========
@@ -359,44 +358,10 @@ function mostrarFormularioEdicionAdmin(id, data) {
         console.log('  - Fecha acción:', data.fechaAccion, '=>', fechaFormateada);
     }
 
-    tokenPermiteBorradoDefinitivo = !data.codempcon && !data.codempcon2;
-    const btnEliminarDefinitivoModal = document.getElementById('btnEliminarDefinitivoModal');
-    if (btnEliminarDefinitivoModal) {
-        btnEliminarDefinitivoModal.style.display = tokenPermiteBorradoDefinitivo ? 'inline-flex' : 'none';
-    }
-    
     console.log('✓ Formulario de edición ADMIN llenado');
     
     // Mostrar modal
     mostrarModal('modalEditarAdmin');
-}
-
-function eliminarTokenDesdeModal(modo) {
-    if (!tokenActual) return;
-
-    if (modo === 'hard') {
-        if (!tokenPermiteBorradoDefinitivo) {
-            alert('Solo se permite eliminar definitivamente tokens en estado PENDIENTE CONFIRMACIÓN INICIAL.');
-            return;
-        }
-
-        if (confirm(`¿Eliminar DEFINITIVAMENTE este token?
-
-Esta acción no se puede deshacer.`)) {
-            cerrarModal('modalEditarAdmin');
-            mostrarLoaderGlobal();
-            window.location.href = 'tokens?action=deleteHard&id=' + tokenActual;
-        }
-        return;
-    }
-
-    if (confirm(`¿Está seguro de ocultar este token?
-
-El registro NO se elimina físicamente, solo quedará invisible.`)) {
-        cerrarModal('modalEditarAdmin');
-        mostrarLoaderGlobal();
-        window.location.href = 'tokens?action=delete&id=' + tokenActual;
-    }
 }
 
 function mostrarFormularioConfirmacion(id, data, modoEdicionFinal) {
