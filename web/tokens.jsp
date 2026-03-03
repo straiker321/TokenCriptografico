@@ -216,6 +216,8 @@
                             <th>Dependencia</th>
                             <th>Estado</th>
                             <th>Acción</th>
+                            <th>¿Fue confirmado?</th>
+                            <th>¿Tiene token?</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -266,6 +268,12 @@
                             </td>
                             <td><%= token.getTipAccionTexto() %></td>
                             <td>
+                                <span class="badge <%= token.getCodempcon() != null ? "badge-success" : "badge-warning" %>">
+                                    <%= token.getFueConfirmadoTexto() %>
+                                </span>
+                            </td>
+                            <td><%= token.getTieneTokenTexto() %></td>
+                            <td>
                                 <div class="action-buttons">
                                     <!-- VER DETALLES: TODOS -->
                                     <button class="btn-icon btn-view"
@@ -304,7 +312,7 @@
                         </tr>
                         <% }} else { %>
                         <tr>
-                            <td colspan="8" style="text-align: center; padding: 30px;">
+                            <td colspan="10" style="text-align: center; padding: 30px;">
                                 <i class="fas fa-inbox" style="font-size: 48px; color: #ccc;"></i>
                                 <p style="margin-top: 10px; color: #666;">No hay tokens registrados</p>
                             </td>
