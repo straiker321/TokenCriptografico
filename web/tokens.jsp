@@ -216,7 +216,6 @@
                             <th>Dependencia</th>
                             <th>Estado</th>
                             <th>Acción</th>
-                            <th>¿Fue confirmado?</th>
                             <th>¿Tiene token?</th>
                             <th>Acciones</th>
                         </tr>
@@ -267,6 +266,7 @@
                                 <% } %>
                             </td>
                             <td><%= token.getTipAccionTexto() %></td>
+                            <td><%= token.getTieneTokenTexto() %></td>
                             <td>
                                 <span class="badge <%= token.getCodempcon() != null ? "badge-success" : "badge-warning" %>">
                                     <%= token.getFueConfirmadoTexto() %>
@@ -312,7 +312,7 @@
                         </tr>
                         <% }} else { %>
                         <tr>
-                            <td colspan="10" style="text-align: center; padding: 30px;">
+                            <td colspan="9" style="text-align: center; padding: 30px;">
                                 <i class="fas fa-inbox" style="font-size: 48px; color: #ccc;"></i>
                                 <p style="margin-top: 10px; color: #666;">No hay tokens registrados</p>
                             </td>
@@ -486,17 +486,6 @@
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>¿Fue confirmado?</label>
-                            <select class="form-control" disabled>
-                                <option value="2" selected>NO</option>
-                                <option value="1">SI</option>
-                            </select>
-                            <small class="form-hint">Informativo para flujo inicial de asignación.</small>
-                        </div>
-                        <div class="form-group"></div>
-                    </div>
                 </div>
 
                 <div class="form-section" style="background: #fff7ed; border-left-color: #f97316;">

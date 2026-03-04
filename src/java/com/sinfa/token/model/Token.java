@@ -214,9 +214,6 @@ public class Token {
         return flgtokcon == 1 ? "SIN TOKEN" : "CON TOKEN";
     }
 
-    public String getFueConfirmadoTexto() {
-        return codempcon != null ? "SI" : "NO";
-    }
 
     public String getTieneTokenTexto() {
         Integer valor = flgtokcon2 != null ? flgtokcon2 : flgtokcon;
