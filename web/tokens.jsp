@@ -218,6 +218,7 @@
                             <th class="col-confirmado">Fue confirmado</th>
                             <th class="col-tiene-token">Tiene token</th>
                             <th>Acción</th>
+                            <th>¿Tiene token?</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -286,6 +287,13 @@
                                 <% } %>
                             </td>
                             <td><%= token.getTipAccionTexto() %></td>
+                            <td><%= token.getTieneTokenTexto() %></td>
+                            <td>
+                                <span class="badge <%= token.getCodempcon() != null ? "badge-success" : "badge-warning" %>">
+                                    <%= token.getFueConfirmadoTexto() %>
+                                </span>
+                            </td>
+                            <td><%= token.getTieneTokenTexto() %></td>
                             <td>
                                 <div class="action-buttons">
                                     <!-- VER DETALLES: TODOS -->
@@ -510,6 +518,7 @@
                         </div>
                         <div class="form-group"></div>
                     </div>
+
                 </div>
 
                 <div class="form-section" style="background: #fff7ed; border-left-color: #f97316;">
