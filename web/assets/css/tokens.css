@@ -185,6 +185,18 @@
     border-right: none;
 }
 
+.tokens-table .col-confirmado,
+.tokens-table .col-tiene-token {
+    text-align: center;
+    min-width: 130px;
+}
+
+.tokens-table td.col-confirmado .badge,
+.tokens-table td.col-tiene-token .badge {
+    justify-content: center;
+    min-width: 110px;
+}
+
 /* ============================================
    BADGES MEJORADOS
    ============================================ */

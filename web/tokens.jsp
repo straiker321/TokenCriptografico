@@ -215,6 +215,8 @@
                             <th>Usuario</th>
                             <th>Dependencia</th>
                             <th>Estado</th>
+                            <th class="col-confirmado">Fue confirmado</th>
+                            <th class="col-tiene-token">Tiene token</th>
                             <th>Acción</th>
                             <th>¿Tiene token?</th>
                             <th>Acciones</th>
@@ -265,6 +267,25 @@
                                 <span class="badge badge-warning">⏳ PEND. CONF. INICIAL</span>
                                 <% } %>
                             </td>
+                            <td class="col-confirmado">
+                                <% if (token.getCodempcon2() != null) { %>
+                                <span class="badge badge-success">SI (FINAL)</span>
+                                <% } else if (token.getCodempcon() != null) { %>
+                                <span class="badge badge-info">SI (INICIAL)</span>
+                                <% } else { %>
+                                <span class="badge badge-warning">NO</span>
+                                <% } %>
+                            </td>
+                            <td class="col-tiene-token">
+                                <% Integer flagTieneToken = token.getCodempcon2() != null ? token.getFlgtokcon2() : token.getFlgtokcon(); %>
+                                <% if (flagTieneToken == null) { %>
+                                <span class="badge badge-neutral">N/A</span>
+                                <% } else if (flagTieneToken == 1) { %>
+                                <span class="badge badge-danger">SIN TOKEN</span>
+                                <% } else { %>
+                                <span class="badge badge-success">CON TOKEN</span>
+                                <% } %>
+                            </td>
                             <td><%= token.getTipAccionTexto() %></td>
                             <td><%= token.getTieneTokenTexto() %></td>
                             <td>
@@ -312,7 +333,7 @@
                         </tr>
                         <% }} else { %>
                         <tr>
-                            <td colspan="9" style="text-align: center; padding: 30px;">
+                            <td colspan="10" style="text-align: center; padding: 30px;">
                                 <i class="fas fa-inbox" style="font-size: 48px; color: #ccc;"></i>
                                 <p style="margin-top: 10px; color: #666;">No hay tokens registrados</p>
                             </td>
@@ -484,6 +505,18 @@
                             <input type="hidden" name="accion" value="1">
                             <% } %>
                         </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>¿Fue confirmado?</label>
+                            <select class="form-control" disabled>
+                                <option value="2" selected>NO</option>
+                                <option value="1">SI</option>
+                            </select>
+                            <small class="form-hint">Informativo para flujo inicial de asignación.</small>
+                        </div>
+                        <div class="form-group"></div>
                     </div>
 
                 </div>
