@@ -212,14 +212,13 @@
                             <th>N°</th>
                             <th>Fecha</th>
                             <th>DNI</th>
-                            <th>Usuario</th>
-                            <th>Dependencia</th>
+                            <th class="col-usuario">Usuario</th>
+                            <th class="col-dependencia">Dependencia</th>
                             <th>Estado</th>
                             <th class="col-confirmado">Fue confirmado</th>
                             <th class="col-tiene-token">Tiene token</th>
-                            <th>Acción</th>
-                            <th>¿Tiene token?</th>
-                            <th>Acciones</th>
+                            <th class="col-accion">Acción</th>
+                            <th class="col-acciones">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -254,8 +253,8 @@
                             <td><%= i++ %></td>
                             <td><%= sdf.format(token.getFecaccion()) %></td>
                             <td><%= token.getNumdnitok() %></td>
-                            <td><%= token.getNombreUsuarioAsignado() %></td>
-                            <td><%= token.getNombreDependencia()%></td>
+                            <td class="col-usuario" title="<%= token.getNombreUsuarioAsignado() %>"><%= token.getNombreUsuarioAsignado() %></td>
+                            <td class="col-dependencia" title="<%= token.getNombreDependencia()%>"><%= token.getNombreDependencia()%></td>
                             <td>
                                 <% if (token.getEstado() == 0) { %>
                                 <span class="badge" style="background:#6b7280;color:#fff;">INACTIVO / OCULTO</span>
@@ -286,15 +285,8 @@
                                 <span class="badge badge-success">CON TOKEN</span>
                                 <% } %>
                             </td>
-                            <td><%= token.getTipAccionTexto() %></td>
-                            <td><%= token.getTieneTokenTexto() %></td>
-                            <td>
-                                <span class="badge <%= token.getCodempcon() != null ? "badge-success" : "badge-warning" %>">
-                                    <%= token.getFueConfirmadoTexto() %>
-                                </span>
-                            </td>
-                            <td><%= token.getTieneTokenTexto() %></td>
-                            <td>
+                            <td class="col-accion"><%= token.getTipAccionTexto() %></td>
+                            <td class="col-acciones">
                                 <div class="action-buttons">
                                     <!-- VER DETALLES: TODOS -->
                                     <button class="btn-icon btn-view"
@@ -411,6 +403,20 @@
                                    pattern="[0-9]{8}" maxlength="8"
                                    onblur="buscarEmpleado(this.value, 'editRecibe')">
                         </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Estado Usuario que Recibe</label>
+                            <input type="text" id="estadoEditRecibe" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Dependencia Usuario que Recibe</label>
+                            <input type="text" id="dependenciaEditRecibe" class="form-control" readonly>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
                         <div class="form-group">
                             <label>Nombre Usuario que Recibe</label>
                             <input type="text" id="nombreEditRecibe" class="form-control" readonly>

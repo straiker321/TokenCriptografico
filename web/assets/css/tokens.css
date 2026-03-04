@@ -197,6 +197,42 @@
     min-width: 110px;
 }
 
+
+.tokens-table {
+    table-layout: fixed;
+}
+
+.tokens-table th,
+.tokens-table td {
+    vertical-align: middle;
+}
+
+.tokens-table .col-usuario,
+.tokens-table .col-dependencia {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tokens-table .col-usuario {
+    max-width: 220px;
+}
+
+.tokens-table .col-dependencia {
+    max-width: 220px;
+}
+
+.tokens-table .col-accion,
+.tokens-table .col-acciones {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.tokens-table .col-acciones .action-buttons {
+    justify-content: center;
+    gap: 6px;
+}
+
 /* ============================================
    BADGES MEJORADOS
    ============================================ */
