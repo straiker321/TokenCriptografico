@@ -213,6 +213,13 @@ public class Token {
         if (flgtokcon == null) return "N/A";
         return flgtokcon == 1 ? "SIN TOKEN" : "CON TOKEN";
     }
+
+
+    public String getTieneTokenTexto() {
+        Integer valor = flgtokcon2 != null ? flgtokcon2 : flgtokcon;
+        if (valor == null) return "N/A";
+        return valor == 1 ? "SIN TOKEN" : "CON TOKEN";
+    }
     
     public boolean isPendienteConfirmacionInicial() {
         return codempcon == null && codempcon2 == null;
