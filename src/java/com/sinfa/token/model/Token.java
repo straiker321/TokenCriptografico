@@ -214,6 +214,22 @@ public class Token {
         return flgtokcon == 1 ? "SIN TOKEN" : "CON TOKEN";
     }
     
+    public Integer getFlgTokConVigente() {
+        return codempcon2 != null ? flgtokcon2 : flgtokcon;
+    }
+
+    public String getFueConfirmadoTexto() {
+        if (codempcon2 != null) return "SI (FINAL)";
+        if (codempcon != null) return "SI (INICIAL)";
+        return "NO";
+    }
+
+    public String getTieneTokenTextoVigente() {
+        Integer flag = getFlgTokConVigente();
+        if (flag == null) return "N/A";
+        return flag == 1 ? "SIN TOKEN" : "CON TOKEN";
+    }
+
     public boolean isPendienteConfirmacionInicial() {
         return codempcon == null && codempcon2 == null;
     }
