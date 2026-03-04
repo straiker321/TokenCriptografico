@@ -268,6 +268,12 @@
                             <td><%= token.getTipAccionTexto() %></td>
                             <td><%= token.getTieneTokenTexto() %></td>
                             <td>
+                                <span class="badge <%= token.getCodempcon() != null ? "badge-success" : "badge-warning" %>">
+                                    <%= token.getFueConfirmadoTexto() %>
+                                </span>
+                            </td>
+                            <td><%= token.getTieneTokenTexto() %></td>
+                            <td>
                                 <div class="action-buttons">
                                     <!-- VER DETALLES: TODOS -->
                                     <button class="btn-icon btn-view"
