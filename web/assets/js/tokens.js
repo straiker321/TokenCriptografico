@@ -875,20 +875,26 @@ function exportarPDF() {
             <title>Reporte de Tokens - SINFA</title>
             <style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { font-family: Arial, sans-serif; padding: 20px; font-size: 11px; }
-                .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #1e3a8a; padding-bottom: 15px; }
-                .header h1 { color: #1e3a8a; font-size: 20px; margin-bottom: 5px; }
-                .header p { color: #666; font-size: 12px; }
-                .info { margin-bottom: 15px; font-size: 10px; }
-                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                th { background-color: #1e3a8a; color: white; padding: 8px 6px; text-align: left; font-size: 10px; }
-                td { padding: 6px; border-bottom: 1px solid #ddd; font-size: 10px; }
-                tr:nth-child(even) { background-color: #f9f9f9; }
-                .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 8px; font-weight: bold; color: white; }
+                body { font-family: Arial, sans-serif; padding: 24px; font-size: 11px; color: #0f172a; }
+                .header { text-align: center; margin-bottom: 18px; border-bottom: 3px solid #1e3a8a; padding-bottom: 12px; }
+                .header h1 { color: #1e3a8a; font-size: 19px; margin-bottom: 6px; letter-spacing: 0.3px; }
+                .header p { color: #475569; font-size: 12px; }
+                .info { margin-bottom: 12px; font-size: 10px; line-height: 1.5; }
+                .kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 12px 0 16px; }
+                .kpi { border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; background: #f8fafc; }
+                .kpi .label { font-size: 9px; color: #475569; text-transform: uppercase; }
+                .kpi .value { font-size: 14px; font-weight: bold; color: #1e3a8a; margin-top: 2px; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 18px; table-layout: fixed; }
+                th { background-color: #1e3a8a; color: white; padding: 8px 6px; text-align: left; font-size: 10px; border: 1px solid #1e40af; }
+                td { padding: 6px; border: 1px solid #e2e8f0; font-size: 10px; vertical-align: top; }
+                tr:nth-child(even) { background-color: #f8fafc; }
+                .center { text-align: center; }
+                .badge { display: inline-block; padding: 2px 6px; border-radius: 999px; font-size: 8px; font-weight: bold; color: white; }
                 .badge-success { background-color: #059669; }
-                .badge-warning { background-color: #f59e0b; }
-                .badge-info { background-color: #3b82f6; }
-                .footer { margin-top: 20px; text-align: center; font-size: 9px; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }
+                .badge-warning { background-color: #d97706; }
+                .badge-info { background-color: #2563eb; }
+                .badge-danger { background-color: #dc2626; }
+                .footer { margin-top: 16px; text-align: center; font-size: 9px; color: #64748b; border-top: 1px solid #cbd5e1; padding-top: 8px; }
                 @media print {
                     .no-print { display: none !important; }
                     @page { margin: 1.5cm; }
@@ -908,6 +914,11 @@ function exportarPDF() {
                 })}</p>
                 <p><strong>Total de registros:</strong> ${filas.length}</p>
             </div>
+
+            <div class="kpis">
+                <div class="kpi"><div class="label">Con token</div><div class="value" id="kpiConToken">-</div></div>
+                <div class="kpi"><div class="label">Sin token</div><div class="value" id="kpiSinToken">-</div></div>
+            </div>
             
             <table>
                 <thead>
@@ -917,29 +928,56 @@ function exportarPDF() {
                         <th>DNI</th>
                         <th>Usuario</th>
                         <th>Dependencia</th>
-                        <th>Estado</th>
-                        <th>Acción</th>
+                        <th class="center">Estado</th>
+                        <th class="center">Acción</th>
+                        <th class="center">¿Tiene token?</th>
                     </tr>
                 </thead>
                 <tbody>
     `;
     
-    // Agregar filas
-    filas.forEach((fila, index) => {
+    // Agregar filas + métricas
+    let conToken = 0;
+    let sinToken = 0;
+
+    filas.forEach((fila) => {
         if (fila.cells.length > 1) {
             const celdas = fila.cells;
             contenidoHTML += '<tr>';
             for (let i = 0; i < celdas.length - 1; i++) {
-                if (i === 5) { // Columna estado
+                const texto = celdas[i].textContent.trim();
+
+                // Columna estado
+                if (i === 5) {
                     const badge = celdas[i].querySelector('.badge');
                     if (badge) {
-                        contenidoHTML += `<td><span class="${badge.className}">${badge.textContent}</span></td>`;
+                        contenidoHTML += `<td class="center"><span class="${badge.className}">${badge.textContent.trim()}</span></td>`;
                     } else {
-                        contenidoHTML += `<td>${celdas[i].textContent.trim()}</td>`;
+                        contenidoHTML += `<td class="center">${texto}</td>`;
                     }
-                } else {
-                    contenidoHTML += `<td>${celdas[i].textContent.trim()}</td>`;
+                    continue;
                 }
+
+                // Columna acción
+                if (i === 6) {
+                    contenidoHTML += `<td class="center">${texto}</td>`;
+                    continue;
+                }
+
+                // Columna ¿Tiene token?
+                if (i === 7) {
+                    const upper = texto.toUpperCase();
+                    if (upper === 'CON TOKEN') conToken++;
+                    if (upper === 'SIN TOKEN') sinToken++;
+
+                    let clase = 'badge badge-info';
+                    if (upper === 'CON TOKEN') clase = 'badge badge-success';
+                    if (upper === 'SIN TOKEN') clase = 'badge badge-danger';
+                    contenidoHTML += `<td class="center"><span class="${clase}">${texto}</span></td>`;
+                    continue;
+                }
+
+                contenidoHTML += `<td>${texto}</td>`;
             }
             contenidoHTML += '</tr>';
         }
@@ -967,6 +1005,15 @@ function exportarPDF() {
     `;
     
     ventanaImpresion.document.write(contenidoHTML);
+
+    const docPrint = ventanaImpresion.document;
+    const setText = (id, value) => {
+        const el = docPrint.getElementById(id);
+        if (el) el.textContent = String(value);
+    };
+    setText('kpiConToken', conToken);
+    setText('kpiSinToken', sinToken);
+
     ventanaImpresion.document.close();
     
     ventanaImpresion.onload = function() {
