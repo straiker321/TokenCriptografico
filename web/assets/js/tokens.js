@@ -357,10 +357,11 @@ function mostrarFormularioEdicionAdmin(id, data) {
     document.getElementById('dependenciaEditAsigna').value = data.dependencia || '';
     
     // DNI que recibe
-    document.getElementById('dniRecibeEdit').value = data.dniRecibe || '';
+    const dniRecibeEdit = (data.dniRecibe || '').trim();
+    document.getElementById('dniRecibeEdit').value = dniRecibeEdit;
     limpiarDatosEmpleado('editRecibe');
-    if (data.dniRecibe && /^\d{8}$/.test(data.dniRecibe)) {
-        buscarEmpleado(data.dniRecibe, 'editRecibe');
+    if (dniRecibeEdit && /^\d{8}$/.test(dniRecibeEdit)) {
+        buscarEmpleado(dniRecibeEdit, 'editRecibe');
     }
     
     // Documento sustento actual

@@ -984,7 +984,7 @@ public class TokenServlet extends HttpServlet {
             // ========== INFORMACIÓN ADICIONAL ==========
             // DNI que recibe (si existe)
             if (token.getDniemprec() != null && !token.getDniemprec().isEmpty()) {
-                json.append(",\"dniRecibe\":\"").append(escapeJson(token.getDniemprec())).append("\"");
+                json.append(",\"dniRecibe\":\"").append(escapeJson(token.getDniemprec().trim())).append("\"");
             }
 
             // Tipo de acción

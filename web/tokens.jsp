@@ -403,20 +403,6 @@
                                    pattern="[0-9]{8}" maxlength="8"
                                    onblur="buscarEmpleado(this.value, 'editRecibe')">
                         </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Estado Usuario que Recibe</label>
-                            <input type="text" id="estadoEditRecibe" class="form-control" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>Dependencia Usuario que Recibe</label>
-                            <input type="text" id="dependenciaEditRecibe" class="form-control" readonly>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
                         <div class="form-group">
                             <label>Nombre Usuario que Recibe</label>
                             <input type="text" id="nombreEditRecibe" class="form-control" readonly>
